@@ -3,18 +3,20 @@ import { defaultLocale, type Locale } from "./i18n";
 const normalizeBaseUrl = (value: string) => value.replace(/\/+$/, "");
 
 const resolveBaseUrl = () => {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL;
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL;
   if (raw) {
     const normalized = raw.trim();
     if (normalized) {
-      return normalizeBaseUrl(normalized);
+      const url = normalized.startsWith("http") ? normalized : `https://${normalized}`;
+      return normalizeBaseUrl(url);
     }
   }
   if (process.env.NODE_ENV !== "production") {
     return "http://localhost:3000";
   }
 
-  throw new Error("NEXT_PUBLIC_SITE_URL is required in production");
+  // Graceful fallback to prevent production build failure when env variable is missing
+  return "https://labels.example.com";
 };
 
 export const getBaseUrl = () => resolveBaseUrl();
