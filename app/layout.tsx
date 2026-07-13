@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: "/brand/labbely-icon.png", sizes: "180x180", type: "image/png" }],
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default async function RootLayout({
@@ -42,7 +45,7 @@ export default async function RootLayout({
   const gaMeasurementId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} translate="no" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

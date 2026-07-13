@@ -1864,7 +1864,7 @@ const LayoutPanel = memo(function LayoutPanel({
           </Button>
         </div>
         <Select
-          value={selectedPresetId ?? undefined}
+          value={selectedPresetId ?? ""}
           onValueChange={(value) => {
             const preset = PRESET_LAYOUTS.find((item) => item.id === value);
             if (preset) {
