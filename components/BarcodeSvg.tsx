@@ -17,7 +17,15 @@ const detectBarcodeFormat = (value: string): string => {
   return "CODE128";
 };
 
-export default function BarcodeSvg({ value, height }: { value: string; height: number }) {
+export default function BarcodeSvg({
+  value,
+  height,
+  maxHeightPx,
+}: {
+  value: string;
+  height: number;
+  maxHeightPx?: number;
+}) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -26,7 +34,8 @@ export default function BarcodeSvg({ value, height }: { value: string; height: n
     }
     try {
       const format = detectBarcodeFormat(value);
-      JsBarcode(svgRef.current, value, {
+      const svg = svgRef.current;
+      JsBarcode(svg, value, {
         format,
         displayValue: true,
         height,
@@ -39,10 +48,25 @@ export default function BarcodeSvg({ value, height }: { value: string; height: n
         background: "transparent",
         lineColor: "#000000",
       });
+      // JsBarcode sets fixed px width/height; swap them for a viewBox so the
+      // barcode scales down to fit the cell while keeping its aspect ratio.
+      const generatedWidth = parseFloat(svg.getAttribute("width") ?? "");
+      const generatedHeight = parseFloat(svg.getAttribute("height") ?? "");
+      if (Number.isFinite(generatedWidth) && Number.isFinite(generatedHeight)) {
+        svg.setAttribute("viewBox", `0 0 ${generatedWidth} ${generatedHeight}`);
+        svg.removeAttribute("width");
+        svg.removeAttribute("height");
+      }
     } catch {
       svgRef.current.innerHTML = "";
     }
   }, [value, height]);
 
-  return <svg ref={svgRef} className="h-auto w-full" style={{ maxWidth: "100%" }} />;
+  return (
+    <svg
+      ref={svgRef}
+      className="h-auto w-full"
+      style={{ maxWidth: "100%", maxHeight: maxHeightPx }}
+    />
+  );
 }

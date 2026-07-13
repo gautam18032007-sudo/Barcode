@@ -118,7 +118,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   activeProductId: null,
   lastSelectedCellId: null,
   setLayout: (layout) => set({ layout }),
-  setPagesToRender: (count) => set({ pagesToRender: Math.min(120, Math.max(1, count)) }),
+  setPagesToRender: (count) => set({ pagesToRender: Math.min(500, Math.max(1, count)) }),
   syncPages: (labelsPerPage, pagesToRender) => {
     set((state) => {
       const count = Math.max(1, pagesToRender ?? state.pagesToRender);

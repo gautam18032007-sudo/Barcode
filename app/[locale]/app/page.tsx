@@ -20,6 +20,7 @@ import { toast } from "sonner";
 
 import BarcodeSvg from "@/components/BarcodeSvg";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import PrintPageStyle from "@/components/PrintPageStyle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +86,8 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       cellPaddingCm: 0.2,
       offsetXCm: 0,
       offsetYCm: 0,
+      barcodeHeightMm: 12,
+      fontSizePt: 7,
     },
   },
   {
@@ -98,6 +101,8 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       labelHeightCm: 3.5,
       gapXCm: 0,
       gapYCm: 0,
+      barcodeHeightMm: 12,
+      fontSizePt: 7,
     },
   },
   {
@@ -111,6 +116,27 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       labelHeightCm: 3.8,
       gapXCm: 0,
       gapYCm: 0,
+      barcodeHeightMm: 12,
+      fontSizePt: 7,
+    },
+  },
+  {
+    id: "roll-jewellery-100x15",
+    labelKey: "layoutPresetRollJewellery",
+    values: {
+      paperWidthCm: 10,
+      paperHeightCm: 1.5,
+      marginCm: 0,
+      // 55mm printable body; the 45mm tail stays blank
+      labelWidthCm: 5.5,
+      labelHeightCm: 1.5,
+      gapXCm: 0,
+      gapYCm: 0,
+      cellPaddingCm: 0.05,
+      offsetXCm: 0,
+      offsetYCm: 0,
+      barcodeHeightMm: 6,
+      fontSizePt: 5,
     },
   },
 ];
@@ -205,6 +231,12 @@ export default function AppPage() {
     () => (layout.barcodeHeightMm ?? 12) * 3.78,
     [layout.barcodeHeightMm],
   );
+  const barcodeMaxHeightPx = useMemo(() => {
+    const labelHeightPx = layout.labelHeightCm * 37.8;
+    const paddingPx = (layout.cellPaddingCm ?? 0) * 2 * 37.8;
+    const nameLinePx = (layout.fontSizePt ?? 7) * 1.33 + 4;
+    return Math.max(labelHeightPx - paddingPx - nameLinePx, 10);
+  }, [layout.labelHeightCm, layout.cellPaddingCm, layout.fontSizePt]);
   const cellPaddingCm = layout.cellPaddingCm ?? 0;
   const offsetX = layout.offsetXCm ?? 0;
   const offsetY = layout.offsetYCm ?? 0;
@@ -593,7 +625,9 @@ export default function AppPage() {
   }, [addProduct, isDuplicateProduct, t]);
 
   const handlePrint = useCallback(() => {
-    if (pagesToRender > 3) {
+    // Roll printers emit one label per page, so long runs are normal there.
+    const confirmThreshold = grid.labelsPerPage === 1 ? 100 : 3;
+    if (pagesToRender > confirmThreshold) {
       const confirmed = window.confirm(t("printConfirm", { count: pagesToRender }));
       if (!confirmed) {
         return;
@@ -601,7 +635,7 @@ export default function AppPage() {
     }
     trackStartPrint(locale, pagesToRender);
     window.print();
-  }, [locale, pagesToRender, t]);
+  }, [grid.labelsPerPage, locale, pagesToRender, t]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1226,6 +1260,7 @@ export default function AppPage() {
                             product?.id ? fillNextAvailable(product.id) : undefined
                           }
                           barcodeHeightPx={barcodeHeightPx}
+                          barcodeMaxHeightPx={barcodeMaxHeightPx}
                           fontSizePt={layout.fontSizePt ?? 7}
                           paddingCm={cellPaddingCm}
                         />
@@ -1284,12 +1319,14 @@ export default function AppPage() {
           </Button>
         </div>
       </div>
+      <PrintPageStyle layout={layout} />
       <PrintArea
         layout={layout}
         grid={grid}
         pages={pages}
         productById={productById}
         barcodeHeightPx={barcodeHeightPx}
+        barcodeMaxHeightPx={barcodeMaxHeightPx}
         paddingCm={cellPaddingCm}
       />
       <div className="no-print mx-auto max-w-[1600px] px-6 pb-10">
@@ -2051,6 +2088,7 @@ const LabelCell = memo(function LabelCell({
   onAssignSelected,
   onDuplicate,
   barcodeHeightPx,
+  barcodeMaxHeightPx,
   fontSizePt,
   paddingCm,
 }: {
@@ -2068,6 +2106,7 @@ const LabelCell = memo(function LabelCell({
   onAssignSelected: () => void;
   onDuplicate: () => void;
   barcodeHeightPx: number;
+  barcodeMaxHeightPx: number;
   fontSizePt: number;
   paddingCm: number;
 }) {
@@ -2094,7 +2133,11 @@ const LabelCell = memo(function LabelCell({
             <div
               className="flex w-full flex-col items-center"
             >
-              <BarcodeSvg value={product.barcode} height={barcodeHeightPx} />
+              <BarcodeSvg
+                value={product.barcode}
+                height={barcodeHeightPx}
+                maxHeightPx={barcodeMaxHeightPx}
+              />
               <p
                 className="mt-1 w-full truncate text-slate-700"
                 style={{ fontSize: `${fontSizePt}pt` }}
@@ -2145,6 +2188,7 @@ const PrintArea = memo(function PrintArea({
   pages,
   productById,
   barcodeHeightPx,
+  barcodeMaxHeightPx,
   paddingCm,
 }: {
   layout: LayoutSettings;
@@ -2152,6 +2196,7 @@ const PrintArea = memo(function PrintArea({
   pages: Page[];
   productById: Map<string, Product>;
   barcodeHeightPx: number;
+  barcodeMaxHeightPx: number;
   paddingCm: number;
 }) {
   return (
@@ -2187,7 +2232,11 @@ const PrintArea = memo(function PrintArea({
                 >
                   {product ? (
                     <>
-                      <BarcodeSvg value={product.barcode} height={barcodeHeightPx} />
+                      <BarcodeSvg
+                        value={product.barcode}
+                        height={barcodeHeightPx}
+                        maxHeightPx={barcodeMaxHeightPx}
+                      />
                       <p
                         className="mt-1 w-full truncate text-slate-700"
                         style={{ fontSize: `${layout.fontSizePt ?? 7}pt` }}

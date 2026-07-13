@@ -36,6 +36,22 @@ describe("computeGrid", () => {
     expect(grid.rows).toBe(12);
   });
 
+  it("yields a single label per page for the 100x15mm jewellery roll", () => {
+    const grid = computeGrid({
+      paperWidthCm: 10,
+      paperHeightCm: 1.5,
+      marginCm: 0,
+      labelWidthCm: 5.5,
+      labelHeightCm: 1.5,
+      gapXCm: 0,
+      gapYCm: 0,
+    });
+
+    expect(grid.columns).toBe(1);
+    expect(grid.rows).toBe(1);
+    expect(grid.labelsPerPage).toBe(1);
+  });
+
   it("clamps negative values to zero", () => {
     const grid = computeGrid({
       paperWidthCm: 21,
