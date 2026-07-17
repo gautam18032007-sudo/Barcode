@@ -143,16 +143,15 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       // printer re-aligns on every label and vertical drift cannot accumulate.
       printPageHeightCm: 1.5,
       marginCm: 0,
-      // 55mm printable body; the 45mm tail stays blank
-      labelWidthCm: 5.5,
+      labelWidthCm: 10,
       labelHeightCm: 1.5,
       gapXCm: 0,
       gapYCm: 0,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
-      barcodeHeightMm: 6,
-      fontSizePt: 5,
+      barcodeHeightMm: 5.5,
+      fontSizePt: 10,
       labelTemplate: "jewellery-split",
       brandText: "ZenZebra",
       // Per-preset: 6 labels per editor page (scalable for other roll sizes)
@@ -2540,10 +2539,8 @@ const PrintArea = memo(function PrintArea({
               }}
             >
               <div
-                className="flex h-full items-center justify-center"
+                className="flex h-full w-full items-center justify-center"
                 style={{
-                  width: `${layout.labelWidthCm}cm`,
-                  maxWidth: "100%",
                   padding: `${paddingCm}cm`,
                   boxSizing: "border-box",
                   transform: `translate(${layout.offsetXCm ?? 0}cm, ${layout.offsetYCm ?? 0}cm)`,
