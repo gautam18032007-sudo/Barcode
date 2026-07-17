@@ -11,6 +11,7 @@ export type Product = {
   /** Per-product brand override; the jewellery template falls back to layout.brandText. */
   brand?: string;
   source: "manual" | "odoo" | "import";
+  quantity?: number;
 };
 
 export type Cell = {
@@ -65,6 +66,8 @@ type EditorState = {
   clearCell: (cellId: string) => void;
   undo: () => void;
   redo: () => void;
+  fillAllByQuantity: (labelsPerPage: number) => void;
+  removeUnassignedProducts: () => void;
 };
 
 const DEFAULT_LAYOUT: LayoutSettings = {
@@ -170,6 +173,7 @@ export const useEditorStore = create<EditorState>((set) => ({
         price: item.price,
         brand: item.brand,
         source: "import",
+        quantity: item.copies,
       }));
       // Expand copies into a flat queue of product ids, then lay them into
       // the existing page/cell grid.
@@ -292,12 +296,17 @@ export const useEditorStore = create<EditorState>((set) => ({
     }),
   clearAll: () =>
     set((state) => {
-      const updatedPages = state.pages.map((page) => ({
-        ...page,
-        cells: page.cells.map((cell) => ({ ...cell, productId: null })),
-      }));
+      const labelsPerPage = state.pages[0]?.cells.length ?? 6;
+      const cleanPage: Page = {
+        id: "page-0",
+        cells: Array.from({ length: labelsPerPage }).map((_, cellIndex) => ({
+          id: `page-0-cell-${cellIndex}`,
+          productId: null,
+        })),
+      };
       return {
-        pages: updatedPages,
+        pages: [cleanPage],
+        pagesToRender: 1,
         history: addHistorySnapshot(state.history, state.pages),
         future: [],
       };
@@ -429,6 +438,56 @@ export const useEditorStore = create<EditorState>((set) => ({
         pages: clonePages(next),
         history: addHistorySnapshot(state.history, state.pages),
         future: nextFuture,
+      };
+    }),
+  fillAllByQuantity: (labelsPerPage) =>
+    set((state) => {
+      const perPage = Math.max(1, labelsPerPage);
+      const queue: string[] = [];
+      
+      // state.products contains products, newer products are at the start.
+      // We process them in reverse (oldest first) so that the order matches
+      // the initial import sequence order (first product in Excel is first in grid).
+      const orderedProducts = [...state.products].reverse();
+      orderedProducts.forEach((product) => {
+        const qty = product.quantity ?? 1;
+        for (let copy = 0; copy < qty; copy += 1) {
+          queue.push(product.id);
+        }
+      });
+
+      const pagesNeeded = Math.max(1, Math.ceil(queue.length / perPage));
+      let cursor = 0;
+      const nextPages: Page[] = Array.from({ length: pagesNeeded }).map((_, pageIndex) => ({
+        id: `page-${pageIndex}`,
+        cells: Array.from({ length: perPage }).map((__, cellIndex) => ({
+          id: `page-${pageIndex}-cell-${cellIndex}`,
+          productId: cursor < queue.length ? queue[cursor++] : null,
+        })),
+      }));
+
+      return {
+        pages: nextPages,
+        pagesToRender: pagesNeeded,
+        history: addHistorySnapshot(state.history, state.pages),
+        future: [],
+      };
+    }),
+  removeUnassignedProducts: () =>
+    set((state) => {
+      const assignedIds = new Set<string>();
+      state.pages.forEach((page) => {
+        page.cells.forEach((cell) => {
+          if (cell.productId) {
+            assignedIds.add(cell.productId);
+          }
+        });
+      });
+      const nextProducts = state.products.filter((product) => assignedIds.has(product.id));
+      return {
+        products: nextProducts,
+        history: addHistorySnapshot(state.history, state.pages),
+        future: [],
       };
     }),
 }));

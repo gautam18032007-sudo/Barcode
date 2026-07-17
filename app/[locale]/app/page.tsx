@@ -134,20 +134,22 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     labelKey: "layoutPresetRollJewellery",
     values: {
       paperWidthCm: 10,
-      paperHeightCm: 1.5,
+      // Editor grouping: set to 16cm per editor page
+      paperHeightCm: 16,
       marginCm: 0,
-      // 55mm printable body; the 45mm tail stays blank
-      labelWidthCm: 5.5,
+      labelWidthCm: 10,
       labelHeightCm: 1.5,
       gapXCm: 0,
-      gapYCm: 0,
+      gapYCm: 1.5,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
-      barcodeHeightMm: 6,
-      fontSizePt: 5,
+      barcodeHeightMm: 5.5,
+      fontSizePt: 10,
       labelTemplate: "jewellery-split",
       brandText: "ZenZebra",
+      // Per-preset: 6 labels per editor page (scalable for other roll sizes)
+      editorLabelsPerPage: 6,
     },
   },
 ];
@@ -198,6 +200,8 @@ export default function AppPage() {
   const clearCell = useEditorStore((state) => state.clearCell);
   const undo = useEditorStore((state) => state.undo);
   const redo = useEditorStore((state) => state.redo);
+  const fillAllByQuantity = useEditorStore((state) => state.fillAllByQuantity);
+  const removeUnassignedProducts = useEditorStore((state) => state.removeUnassignedProducts);
 
   const [manualName, setManualName] = useState("");
   const [manualBarcode, setManualBarcode] = useState("");
@@ -584,6 +588,7 @@ export default function AppPage() {
       barcode: manualBarcode.trim(),
       sku: manualSku.trim() || undefined,
       source: "manual",
+      quantity: 1,
     };
     if (isDuplicateProduct(newProduct)) {
       toast.info(t("productAlreadyAdded"));
@@ -606,6 +611,7 @@ export default function AppPage() {
         sku: result.default_code ?? undefined,
         price: typeof result.list_price === "number" ? result.list_price : undefined,
         source: "odoo",
+        quantity: 1,
       };
       if (isDuplicateProduct(newProduct)) {
         toast.info(t("productAlreadyAdded"));
@@ -628,6 +634,7 @@ export default function AppPage() {
       barcode: t("sampleProductBarcode"),
       sku: t("sampleProductSku"),
       source: "manual",
+      quantity: 1,
     };
     if (isDuplicateProduct(sampleProduct)) {
       toast.info(t("productAlreadyAdded"));
@@ -953,6 +960,9 @@ export default function AppPage() {
                           setPopoverOpen={setPopoverOpen}
                           assignToSelected={assignToSelected}
                           assignedCounts={assignedCounts}
+                          fillAllByQuantity={fillAllByQuantity}
+                          removeUnassignedProducts={removeUnassignedProducts}
+                          labelsPerPage={grid.labelsPerPage}
                           isMobile={true}
                         />
                         <DrawerClose asChild>
@@ -1070,6 +1080,9 @@ export default function AppPage() {
               setPopoverOpen={setPopoverOpen}
               assignToSelected={assignToSelected}
               assignedCounts={assignedCounts}
+              fillAllByQuantity={fillAllByQuantity}
+              removeUnassignedProducts={removeUnassignedProducts}
+              labelsPerPage={grid.labelsPerPage}
               isMobile={isMobile}
             />
           </div>
@@ -1100,6 +1113,25 @@ export default function AppPage() {
                   labels: grid.labelsPerPage,
                 })}
               </p>
+              {(() => {
+                const totalAssigned = Array.from(assignedCounts.values()).reduce((s, c) => s + c, 0);
+                const printPages = layout.printPageHeightCm
+                  ? totalAssigned
+                  : pagesToRender;
+                return (
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                    <span>{t("statsProducts", { count: products.length })}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{t("statsLabels", { count: totalAssigned })}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{t("statsLabelsPerPage", { count: grid.labelsPerPage })}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{t("statsEditorPages", { count: pagesToRender })}</span>
+                    <span className="text-slate-300">•</span>
+                    <span>{t("statsPrintPages", { count: printPages })}</span>
+                  </div>
+                );
+              })()}
             </div>
             <div className="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center">
               {!isMobile ? (
@@ -1452,6 +1484,7 @@ const ProductCard = memo(function ProductCard({
   onFillAll,
   onRemove,
   onPriceChange,
+  onQuantityChange,
 }: {
   product: Product;
   active: boolean;
@@ -1462,9 +1495,16 @@ const ProductCard = memo(function ProductCard({
   onFillAll: () => void;
   onRemove: () => void;
   onPriceChange: (price: number | undefined) => void;
+  onQuantityChange: (quantity: number) => void;
 }) {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(product.quantity ?? 1);
   const t = useTranslations("App");
+
+  useEffect(() => {
+    if (product.quantity !== undefined) {
+      setQuantity(product.quantity);
+    }
+  }, [product.quantity]);
 
   return (
     <div
@@ -1559,7 +1599,11 @@ const ProductCard = memo(function ProductCard({
             min={1}
             value={quantity}
             onClick={(event) => event.stopPropagation()}
-            onChange={(event) => setQuantity(Number(event.target.value) || 1)}
+            onChange={(event) => {
+              const val = Number(event.target.value) || 1;
+              setQuantity(val);
+              onQuantityChange(val);
+            }}
           />
           <Tooltip>
             <TooltipTrigger asChild>
@@ -1620,6 +1664,9 @@ type SidebarContentProps = {
   popoverOpen: boolean;
   setPopoverOpen: (value: boolean) => void;
   assignToSelected: (productId: string) => void;
+  fillAllByQuantity: (labelsPerPage: number) => void;
+  removeUnassignedProducts: () => void;
+  labelsPerPage: number;
   isMobile: boolean;
 };
 
@@ -1659,10 +1706,27 @@ const SidebarContent = memo(function SidebarContent({
   popoverOpen,
   setPopoverOpen,
   assignToSelected,
+  fillAllByQuantity,
+  removeUnassignedProducts,
+  labelsPerPage,
   isMobile,
 }: SidebarContentProps) {
   const t = useTranslations("App");
+  const [localSearchQuery, setLocalSearchQuery] = useState("");
   const products = useMemo(() => Array.from(productById.values()), [productById]);
+
+  const filteredProducts = useMemo(() => {
+    if (!localSearchQuery.trim()) {
+      return products;
+    }
+    const q = localSearchQuery.toLowerCase();
+    return products.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        (p.barcode && p.barcode.toLowerCase().includes(q)) ||
+        (p.sku && p.sku.toLowerCase().includes(q))
+    );
+  }, [products, localSearchQuery]);
 
   return (
     <>
@@ -1852,9 +1916,48 @@ const SidebarContent = memo(function SidebarContent({
       <ExcelImport />
       {!isMobile ? (
         <div className="space-y-3">
-          <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
-            {t("products")}
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+              {t("products")}
+            </h3>
+            <div className="flex items-center gap-2">
+              {products.length > 0 ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[10px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-medium px-2 py-0 cursor-pointer"
+                  onClick={removeUnassignedProducts}
+                  title="Remove all products from list that aren't assigned to any cell"
+                >
+                  Clear Unassigned
+                </Button>
+              ) : null}
+              {products.length > 0 ? (
+                <Badge variant="secondary">{filteredProducts.length}</Badge>
+              ) : null}
+            </div>
+          </div>
+          {products.length > 0 ? (
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                value={localSearchQuery}
+                onChange={(e) => setLocalSearchQuery(e.target.value)}
+                className="h-8 text-xs"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs h-8 cursor-pointer"
+                onClick={() => fillAllByQuantity(labelsPerPage)}
+              >
+                Auto-fill All by Quantity
+              </Button>
+            </div>
+          ) : null}
           <div className="space-y-2">
             {products.length === 0 ? (
               <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-xs text-slate-600">
@@ -1864,8 +1967,12 @@ const SidebarContent = memo(function SidebarContent({
                   {t("productsEmptyCta")}
                 </Button>
               </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-xs text-slate-600 text-center">
+                <p className="text-slate-500">No matching products found.</p>
+              </div>
             ) : (
-              products.map((product) => (
+              filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
                   product={product}
@@ -1877,6 +1984,7 @@ const SidebarContent = memo(function SidebarContent({
                   onFillAll={() => fillAllPages(product.id)}
                   onRemove={() => removeProduct(product.id)}
                   onPriceChange={(price) => updateProduct(product.id, { price })}
+                  onQuantityChange={(qty) => updateProduct(product.id, { quantity: qty })}
                 />
               ))
             )}
@@ -1970,6 +2078,9 @@ const LayoutPanel = memo(function LayoutPanel({
             onClick={() => {
               if (activePreset) {
                 setLayout({ ...layout, ...activePreset.values });
+                if (activePreset.id === "roll-jewellery-100x15") {
+                  setPagesToRender(1);
+                }
               }
             }}
           >
@@ -1983,6 +2094,9 @@ const LayoutPanel = memo(function LayoutPanel({
             if (preset) {
               setSelectedPresetId(preset.id);
               setLayout({ ...layout, ...preset.values });
+              if (preset.id === "roll-jewellery-100x15") {
+                setPagesToRender(1);
+              }
             }
           }}
         >
@@ -2396,6 +2510,64 @@ const PrintArea = memo(function PrintArea({
   barcodeMaxHeightPx: number;
   paddingCm: number;
 }) {
+  // Roll printers: flatten all filled cells → 1 label per physical print page
+  if (layout.printPageHeightCm) {
+    const printHeightCm = layout.printPageHeightCm;
+    const filledCells = pages.flatMap((page) =>
+      page.cells.filter((cell) => cell.productId),
+    );
+    return (
+      <div className="print-only">
+        {filledCells.map((cell) => {
+          const product = productById.get(cell.productId ?? "") ?? null;
+          if (!product) return null;
+          return (
+            <div
+              key={cell.id}
+              className="print-page"
+              style={{
+                width: `${layout.paperWidthCm}cm`,
+                height: `${printHeightCm}cm`,
+                padding: `${layout.marginCm}cm`,
+                boxSizing: "border-box",
+              }}
+            >
+              <div
+                className="flex h-full w-full items-center justify-center"
+                style={{ padding: `${paddingCm}cm`, boxSizing: "border-box" }}
+              >
+                {layout.labelTemplate === "jewellery-split" ? (
+                  <JewellerySplitContent
+                    product={product}
+                    barcodeHeightPx={barcodeHeightPx}
+                    barcodeMaxHeightPx={barcodeMaxHeightPx}
+                    fontSizePt={layout.fontSizePt ?? 7}
+                    brandText={layout.brandText ?? "ZenZebra"}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center">
+                    <BarcodeSvg
+                      value={product.barcode}
+                      height={barcodeHeightPx}
+                      maxHeightPx={barcodeMaxHeightPx}
+                    />
+                    <p
+                      className="mt-1 w-full truncate text-slate-700"
+                      style={{ fontSize: `${layout.fontSizePt ?? 7}pt` }}
+                    >
+                      {product.name}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Sheet printers: standard grid layout (A4, etc.)
   return (
     <div className="print-only">
       {pages.map((page) => (
