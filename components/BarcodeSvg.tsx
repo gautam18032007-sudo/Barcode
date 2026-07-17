@@ -4,14 +4,18 @@ import JsBarcode from "jsbarcode";
 import { useEffect, useRef } from "react";
 
 const detectBarcodeFormat = (value: string): string => {
-  const cleaned = value.replace(/\D/g, "");
-  if (cleaned.length === 13) {
+  // If the value contains any non-digit characters, use CODE128
+  // (CODE128 supports the full ASCII character set including letters)
+  if (/\D/.test(value)) {
+    return "CODE128";
+  }
+  if (value.length === 13) {
     return "EAN13";
   }
-  if (cleaned.length === 8) {
+  if (value.length === 8) {
     return "EAN8";
   }
-  if (cleaned.length === 12) {
+  if (value.length === 12) {
     return "UPC";
   }
   return "CODE128";
