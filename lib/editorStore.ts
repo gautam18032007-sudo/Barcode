@@ -68,6 +68,7 @@ type EditorState = {
   redo: () => void;
   fillAllByQuantity: (labelsPerPage: number) => void;
   removeUnassignedProducts: () => void;
+  clearUnassignedCells: () => void;
 };
 
 const DEFAULT_LAYOUT: LayoutSettings = {
@@ -486,6 +487,23 @@ export const useEditorStore = create<EditorState>((set) => ({
       const nextProducts = state.products.filter((product) => assignedIds.has(product.id));
       return {
         products: nextProducts,
+        history: addHistorySnapshot(state.history, state.pages),
+        future: [],
+      };
+    }),
+  clearUnassignedCells: () =>
+    set((state) => {
+      const productIds = new Set(state.products.map((p) => p.id));
+      const updatedPages = state.pages.map((page) => ({
+        ...page,
+        cells: page.cells.map((cell) =>
+          cell.productId && !productIds.has(cell.productId)
+            ? { ...cell, productId: null }
+            : cell
+        ),
+      }));
+      return {
+        pages: updatedPages,
         history: addHistorySnapshot(state.history, state.pages),
         future: [],
       };

@@ -201,7 +201,7 @@ export default function AppPage() {
   const undo = useEditorStore((state) => state.undo);
   const redo = useEditorStore((state) => state.redo);
   const fillAllByQuantity = useEditorStore((state) => state.fillAllByQuantity);
-  const removeUnassignedProducts = useEditorStore((state) => state.removeUnassignedProducts);
+  const clearUnassignedCells = useEditorStore((state) => state.clearUnassignedCells);
 
   const [manualName, setManualName] = useState("");
   const [manualBarcode, setManualBarcode] = useState("");
@@ -961,7 +961,7 @@ export default function AppPage() {
                           assignToSelected={assignToSelected}
                           assignedCounts={assignedCounts}
                           fillAllByQuantity={fillAllByQuantity}
-                          removeUnassignedProducts={removeUnassignedProducts}
+                          clearUnassignedCells={clearUnassignedCells}
                           labelsPerPage={grid.labelsPerPage}
                           isMobile={true}
                         />
@@ -1081,7 +1081,7 @@ export default function AppPage() {
               assignToSelected={assignToSelected}
               assignedCounts={assignedCounts}
               fillAllByQuantity={fillAllByQuantity}
-              removeUnassignedProducts={removeUnassignedProducts}
+              clearUnassignedCells={clearUnassignedCells}
               labelsPerPage={grid.labelsPerPage}
               isMobile={isMobile}
             />
@@ -1665,7 +1665,7 @@ type SidebarContentProps = {
   setPopoverOpen: (value: boolean) => void;
   assignToSelected: (productId: string) => void;
   fillAllByQuantity: (labelsPerPage: number) => void;
-  removeUnassignedProducts: () => void;
+  clearUnassignedCells: () => void;
   labelsPerPage: number;
   isMobile: boolean;
 };
@@ -1707,7 +1707,7 @@ const SidebarContent = memo(function SidebarContent({
   setPopoverOpen,
   assignToSelected,
   fillAllByQuantity,
-  removeUnassignedProducts,
+  clearUnassignedCells,
   labelsPerPage,
   isMobile,
 }: SidebarContentProps) {
@@ -1927,8 +1927,8 @@ const SidebarContent = memo(function SidebarContent({
                   variant="ghost"
                   size="sm"
                   className="h-7 text-[10px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-medium px-2 py-0 cursor-pointer"
-                  onClick={removeUnassignedProducts}
-                  title="Remove all products from list that aren't assigned to any cell"
+                  onClick={clearUnassignedCells}
+                  title="Remove all labels from pages whose products are not in the list"
                 >
                   Clear Unassigned
                 </Button>
