@@ -36,53 +36,36 @@ describe("computeGrid", () => {
     expect(grid.rows).toBe(12);
   });
 
-  it("yields 6 labels per page for the jewellery roll preset with editorLabelsPerPage", () => {
+  it("yields a single label per page for the 100x15mm jewellery roll", () => {
     const grid = computeGrid({
       paperWidthCm: 10,
-      paperHeightCm: 16,
+      paperHeightCm: 1.5,
       marginCm: 0,
+      labelWidthCm: 5.5,
+      labelHeightCm: 1.5,
+      gapXCm: 0,
+      gapYCm: 0,
+    });
+
+    expect(grid.columns).toBe(1);
+    expect(grid.rows).toBe(1);
+    expect(grid.labelsPerPage).toBe(1);
+  });
+
+  it("yields exactly 6 labels per page for the A4 6-up jewellery preset", () => {
+    const grid = computeGrid({
+      paperWidthCm: 21,
+      paperHeightCm: 29.7,
+      marginCm: 1,
       labelWidthCm: 10,
       labelHeightCm: 1.5,
       gapXCm: 0,
-      gapYCm: 1.5,
-      editorLabelsPerPage: 6,
+      gapYCm: 2.8,
     });
 
     expect(grid.columns).toBe(1);
     expect(grid.rows).toBe(6);
     expect(grid.labelsPerPage).toBe(6);
-  });
-
-  it("uses editorLabelsPerPage override instead of columns × rows", () => {
-    const grid = computeGrid({
-      paperWidthCm: 21,
-      paperHeightCm: 29.7,
-      marginCm: 1,
-      labelWidthCm: 3.8,
-      labelHeightCm: 2.12,
-      editorLabelsPerPage: 10,
-    });
-
-    // Override takes precedence
-    expect(grid.labelsPerPage).toBe(10);
-    // Columns still computed from geometry
-    expect(grid.columns).toBe(5);
-    // Rows recomputed from override / columns
-    expect(grid.rows).toBe(2);
-  });
-
-  it("ignores editorLabelsPerPage when zero or negative", () => {
-    const grid = computeGrid({
-      paperWidthCm: 21,
-      paperHeightCm: 29.7,
-      marginCm: 1,
-      labelWidthCm: 3.8,
-      labelHeightCm: 2.12,
-      editorLabelsPerPage: 0,
-    });
-
-    // Falls back to normal grid math
-    expect(grid.labelsPerPage).toBe(65);
   });
 
   it("clamps negative values to zero", () => {
@@ -101,4 +84,3 @@ describe("computeGrid", () => {
     expect(grid.labelsPerPage).toBe(0);
   });
 });
-

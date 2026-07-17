@@ -84,7 +84,6 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
-      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 3.8,
       labelHeightCm: 2.12,
@@ -104,7 +103,6 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
-      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 7,
       labelHeightCm: 3.5,
@@ -121,7 +119,6 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
-      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 9.9,
       labelHeightCm: 3.8,
@@ -137,20 +134,42 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     labelKey: "layoutPresetRollJewellery",
     values: {
       paperWidthCm: 10,
-      paperHeightCm: 9,
+      paperHeightCm: 1.5,
       marginCm: 0,
-      labelWidthCm: 10,
-      labelHeightCm: 1.48,
+      // 55mm printable body; the 45mm tail stays blank
+      labelWidthCm: 5.5,
+      labelHeightCm: 1.5,
       gapXCm: 0,
       gapYCm: 0,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
-      barcodeHeightMm: 5.5,
-      fontSizePt: 10,
+      barcodeHeightMm: 6,
+      fontSizePt: 5,
       labelTemplate: "jewellery-split",
       brandText: "ZenZebra",
-      editorLabelsPerPage: 6,
+    },
+  },
+  {
+    // 6 jewellery labels per A4 page for one-click browser printing / Save-as-PDF.
+    // 1 column × 6 rows: the row gap is tuned so computeGrid floors to exactly 6.
+    id: "a4-jewellery-6up",
+    labelKey: "layoutPresetA4Jewellery6",
+    values: {
+      paperWidthCm: 21,
+      paperHeightCm: 29.7,
+      marginCm: 1,
+      labelWidthCm: 10,
+      labelHeightCm: 1.5,
+      gapXCm: 0,
+      gapYCm: 2.8,
+      cellPaddingCm: 0.1,
+      offsetXCm: 0,
+      offsetYCm: 0,
+      barcodeHeightMm: 8,
+      fontSizePt: 8,
+      labelTemplate: "jewellery-split",
+      brandText: "ZenZebra",
     },
   },
 ];
@@ -1116,9 +1135,7 @@ export default function AppPage() {
               </p>
               {(() => {
                 const totalAssigned = Array.from(assignedCounts.values()).reduce((s, c) => s + c, 0);
-                const printPages = layout.printPageHeightCm
-                  ? totalAssigned
-                  : pagesToRender;
+                const printPages = pagesToRender;
                 return (
                   <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
                     <span>{t("statsProducts", { count: products.length })}</span>
@@ -1370,6 +1387,7 @@ export default function AppPage() {
                           paddingCm={cellPaddingCm}
                           labelTemplate={layout.labelTemplate}
                           brandText={layout.brandText}
+                          nameAlign={layout.nameAlign}
                         />
                       );
                     })}
@@ -2254,7 +2272,7 @@ const LayoutPanel = memo(function LayoutPanel({
             <Input
               id="offset-x"
               type="number"
-              step="0.02"
+              step="0.05"
               value={layout.offsetXCm ?? 0}
               onChange={(event) => setLayout({ ...layout, offsetXCm: Number(event.target.value) })}
             />
@@ -2264,7 +2282,7 @@ const LayoutPanel = memo(function LayoutPanel({
             <Input
               id="offset-y"
               type="number"
-              step="0.02"
+              step="0.05"
               value={layout.offsetYCm ?? 0}
               onChange={(event) => setLayout({ ...layout, offsetYCm: Number(event.target.value) })}
             />
@@ -2299,6 +2317,24 @@ const LayoutPanel = memo(function LayoutPanel({
               onChange={(event) => setLayout({ ...layout, fontSizePt: Number(event.target.value) })}
             />
           </div>
+          <div className="space-y-2">
+            <Label>{t("layoutNameAlign")}</Label>
+            <Select
+              value={layout.nameAlign ?? "center"}
+              onValueChange={(value) =>
+                setLayout({ ...layout, nameAlign: value as "left" | "center" | "right" })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="left">{t("alignLeft")}</SelectItem>
+                <SelectItem value="center">{t("alignCenter")}</SelectItem>
+                <SelectItem value="right">{t("alignRight")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -2321,18 +2357,25 @@ const LayoutPanel = memo(function LayoutPanel({
 const formatPrice = (price: number) =>
   Number.isInteger(price) ? String(price) : price.toFixed(2);
 
+type NameAlign = "left" | "center" | "right";
+
+const nameAlignClass = (align?: NameAlign): string =>
+  align === "left" ? "text-left" : align === "right" ? "text-right" : "text-center";
+
 function JewellerySplitContent({
   product,
   barcodeHeightPx,
   barcodeMaxHeightPx,
   fontSizePt,
   brandText,
+  nameAlign,
 }: {
   product: Product;
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
   fontSizePt: number;
   brandText: string;
+  nameAlign?: NameAlign;
 }) {
   return (
     <div className="flex h-full w-full items-stretch">
@@ -2343,7 +2386,7 @@ function JewellerySplitContent({
           maxHeightPx={barcodeMaxHeightPx}
         />
         <p
-          className="w-full truncate text-center text-slate-900"
+          className={`w-full truncate text-slate-900 ${nameAlignClass(nameAlign)}`}
           style={{ fontSize: `${fontSizePt}pt`, lineHeight: 1.2 }}
         >
           {product.sku ? `${product.sku} ${product.name}` : product.name}
@@ -2389,6 +2432,7 @@ const LabelCell = memo(function LabelCell({
   paddingCm,
   labelTemplate,
   brandText,
+  nameAlign,
 }: {
   labelIndex: number;
   product: Product | null;
@@ -2409,6 +2453,7 @@ const LabelCell = memo(function LabelCell({
   paddingCm: number;
   labelTemplate?: "default" | "jewellery-split";
   brandText?: string;
+  nameAlign?: NameAlign;
 }) {
   const t = useTranslations("App");
 
@@ -2440,6 +2485,7 @@ const LabelCell = memo(function LabelCell({
                   barcodeMaxHeightPx={barcodeMaxHeightPx}
                   fontSizePt={fontSizePt}
                   brandText={brandText ?? "ZenZebra"}
+                  nameAlign={nameAlign}
                 />
               ) : (
                 <>
@@ -2449,7 +2495,7 @@ const LabelCell = memo(function LabelCell({
                     maxHeightPx={barcodeMaxHeightPx}
                   />
                   <p
-                    className="mt-1 w-full truncate text-slate-700"
+                    className={`mt-1 w-full truncate text-slate-700 ${nameAlignClass(nameAlign)}`}
                     style={{ fontSize: `${fontSizePt}pt` }}
                   >
                     {product.name}
@@ -2511,68 +2557,6 @@ const PrintArea = memo(function PrintArea({
   barcodeMaxHeightPx: number;
   paddingCm: number;
 }) {
-  // Roll printers: flatten all filled cells → 1 label per physical print page
-  if (layout.printPageHeightCm) {
-    const printHeightCm = layout.printPageHeightCm;
-    const filledCells = pages.flatMap((page) =>
-      page.cells.filter((cell) => cell.productId),
-    );
-    return (
-      <div className="print-only">
-        {filledCells.map((cell) => {
-          const product = productById.get(cell.productId ?? "") ?? null;
-          if (!product) return null;
-          return (
-            <div
-              key={cell.id}
-              className="print-page"
-              style={{
-                width: `${layout.paperWidthCm}cm`,
-                height: `${printHeightCm}cm`,
-                padding: `${layout.marginCm}cm`,
-                boxSizing: "border-box",
-              }}
-            >
-              <div
-                className="flex h-full w-full items-center justify-center"
-                style={{
-                  padding: `${paddingCm}cm`,
-                  boxSizing: "border-box",
-                  transform: `translate(${layout.offsetXCm ?? 0}cm, ${layout.offsetYCm ?? 0}cm)`,
-                }}
-              >
-                {layout.labelTemplate === "jewellery-split" ? (
-                  <JewellerySplitContent
-                    product={product}
-                    barcodeHeightPx={barcodeHeightPx}
-                    barcodeMaxHeightPx={barcodeMaxHeightPx}
-                    fontSizePt={layout.fontSizePt ?? 7}
-                    brandText={layout.brandText ?? "ZenZebra"}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center">
-                    <BarcodeSvg
-                      value={product.barcode}
-                      height={barcodeHeightPx}
-                      maxHeightPx={barcodeMaxHeightPx}
-                    />
-                    <p
-                      className="mt-1 w-full truncate text-slate-700"
-                      style={{ fontSize: `${layout.fontSizePt ?? 7}pt` }}
-                    >
-                      {product.name}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
-
-  // Sheet printers: standard grid layout (A4, etc.)
   return (
     <div className="print-only">
       {pages.map((page) => (
@@ -2612,6 +2596,7 @@ const PrintArea = memo(function PrintArea({
                         barcodeMaxHeightPx={barcodeMaxHeightPx}
                         fontSizePt={layout.fontSizePt ?? 7}
                         brandText={layout.brandText ?? "ZenZebra"}
+                        nameAlign={layout.nameAlign}
                       />
                     ) : (
                       <>
@@ -2621,7 +2606,7 @@ const PrintArea = memo(function PrintArea({
                           maxHeightPx={barcodeMaxHeightPx}
                         />
                         <p
-                          className="mt-1 w-full truncate text-slate-700"
+                          className={`mt-1 w-full truncate text-slate-700 ${nameAlignClass(layout.nameAlign)}`}
                           style={{ fontSize: `${layout.fontSizePt ?? 7}pt` }}
                         >
                           {product.name}

@@ -1,10 +1,6 @@
 export type LayoutSettings = {
   paperWidthCm: number;
   paperHeightCm: number;
-  /** Physical print page height for roll printers (e.g. 1.5cm per sticker).
-   *  When set, @page uses this instead of paperHeightCm, and PrintArea
-   *  renders one label per physical print page. */
-  printPageHeightCm?: number;
   marginCm: number;
   labelWidthCm: number;
   labelHeightCm: number;
@@ -17,10 +13,7 @@ export type LayoutSettings = {
   offsetYCm?: number;
   labelTemplate?: "default" | "jewellery-split";
   brandText?: string;
-  /** Per-preset override for how many labels to group per editor page.
-   *  When set, computeGrid() uses this instead of columns × rows.
-   *  Keeps the system scalable across roll sizes (100×15→6, 100×20→5, etc.). */
-  editorLabelsPerPage?: number;
+  nameAlign?: "left" | "center" | "right";
 };
 
 export type GridMetrics = {
@@ -50,19 +43,13 @@ export function computeGrid(layout: LayoutSettings): GridMetrics {
 
   const columns = cellWidthCm === 0 ? 0 : Math.floor(usableWidthCm / cellWidthCm);
   const rows = cellHeightCm === 0 ? 0 : Math.floor(usableHeightCm / cellHeightCm);
-
-  // Use per-preset override when provided; otherwise compute from grid math.
-  const override = layout.editorLabelsPerPage;
-  const labelsPerPage =
-    override != null && override > 0
-      ? override
-      : Math.max(0, columns * rows);
+  const labelsPerPage = Math.max(0, columns * rows);
 
   return {
     usableWidthCm,
     usableHeightCm,
     columns,
-    rows: labelsPerPage > 0 && columns > 0 ? Math.ceil(labelsPerPage / columns) : rows,
+    rows,
     labelsPerPage,
     cellWidthCm,
     cellHeightCm,
