@@ -102,6 +102,8 @@ body.locale-switching > .locale-transition {
 
   .print-only {
     display: block;
+    position: fixed;
+    inset: 0;
   }
 
   .print-page {

@@ -3,20 +3,22 @@
 import JsBarcode from "jsbarcode";
 import { useEffect, useRef } from "react";
 
-const detectBarcodeFormat = (value: string): string => {
-  // If the value contains any non-digit characters, use CODE128
-  // (CODE128 supports the full ASCII character set including letters)
-  if (/\D/.test(value)) {
-    return "CODE128";
-  }
-  if (value.length === 13) {
+// Pick a symbology from the WHOLE (trimmed) value. EAN/UPC only accept digits
+// of an exact length, so anything with letters/symbols or another length is
+// CODE128 — which supports the full ASCII set (e.g. "KNITAHDBG88979570").
+//
+// Note: the previous version stripped non-digits first and matched on the
+// digit count, so "KNITAHDBG88979570" (8 embedded digits) was mis-detected as
+// EAN8 and failed to render.
+export const detectBarcodeFormat = (value: string): string => {
+  if (/^\d{13}$/.test(value)) {
     return "EAN13";
   }
-  if (value.length === 8) {
-    return "EAN8";
-  }
-  if (value.length === 12) {
+  if (/^\d{12}$/.test(value)) {
     return "UPC";
+  }
+  if (/^\d{8}$/.test(value)) {
+    return "EAN8";
   }
   return "CODE128";
 };
@@ -33,38 +35,25 @@ export default function BarcodeSvg({
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
-    if (!svgRef.current || !value) {
+    const svg = svgRef.current;
+    const trimmed = value.trim();
+    if (!svg || !trimmed) {
+      if (svg) {
+        svg.innerHTML = "";
+      }
       return;
     }
-    try {
-      const format = detectBarcodeFormat(value);
-      const svg = svgRef.current;
 
-      // Check if value contains alphabetic characters
-      const hasLetters = /[a-zA-Z]/.test(value);
-
-      // For alphanumeric barcodes: bar width -1 (=1), SKU text +1.2 (=11.2)
-      // For pure numeric barcodes: keep original width=2, fontSize=10
-      let barWidth: number;
-      let textSize: number;
-      if (format === "EAN13" || format === "EAN8" || format === "UPC") {
-        barWidth = 1.5;
-        textSize = 10;
-      } else if (hasLetters) {
-        barWidth = 1;
-        textSize = 11.2;
-      } else {
-        barWidth = 2;
-        textSize = 10;
-      }
-
-      JsBarcode(svg, value, {
+    const render = (format: string) => {
+      JsBarcode(svg, trimmed, {
         format,
         displayValue: true,
         height,
         margin: 2,
-        width: barWidth,
-        fontSize: textSize,
+        width: format === "CODE128" ? 2 : 1.5,
+        // Bold, larger human-readable number so it reads clearly at small sizes.
+        fontSize: 18,
+        fontOptions: "bold",
         textAlign: "center",
         textPosition: "bottom",
         textMargin: 2,
@@ -80,8 +69,18 @@ export default function BarcodeSvg({
         svg.removeAttribute("width");
         svg.removeAttribute("height");
       }
+    };
+
+    try {
+      render(detectBarcodeFormat(trimmed));
     } catch {
-      svgRef.current.innerHTML = "";
+      // Fall back to CODE128 (accepts any ASCII) — e.g. a 13-digit value with
+      // an invalid EAN checksum would otherwise render blank.
+      try {
+        render("CODE128");
+      } catch {
+        svg.innerHTML = "";
+      }
     }
   }, [value, height]);
 
