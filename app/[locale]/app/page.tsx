@@ -146,7 +146,9 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       labelWidthCm: 10,
       labelHeightCm: 1.5,
       gapXCm: 0,
-      gapYCm: 0,
+      // Editor-preview spacing between labels; physical printing is per-sticker
+      // (printPageHeightCm), so this gap never shifts the printed output.
+      gapYCm: 1.5,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
