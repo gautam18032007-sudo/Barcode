@@ -84,6 +84,7 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
+      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 3.8,
       labelHeightCm: 2.12,
@@ -103,6 +104,7 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
+      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 7,
       labelHeightCm: 3.5,
@@ -119,6 +121,7 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     values: {
       paperWidthCm: 21,
       paperHeightCm: 29.7,
+      printPageHeightCm: undefined,
       marginCm: 1,
       labelWidthCm: 9.9,
       labelHeightCm: 3.8,
@@ -134,13 +137,16 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     labelKey: "layoutPresetRollJewellery",
     values: {
       paperWidthCm: 10,
-      // Editor grouping: set to 16cm per editor page
-      paperHeightCm: 16,
+      // 6 labels × 1.5cm = 9cm per editor page
+      paperHeightCm: 9,
+      // Each physical sticker prints as its own 100×15mm page so the
+      // printer re-aligns on every label and vertical drift cannot accumulate.
+      printPageHeightCm: 1.5,
       marginCm: 0,
       labelWidthCm: 10,
       labelHeightCm: 1.5,
       gapXCm: 0,
-      gapYCm: 1.5,
+      gapYCm: 0,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
@@ -2253,7 +2259,7 @@ const LayoutPanel = memo(function LayoutPanel({
             <Input
               id="offset-x"
               type="number"
-              step="0.05"
+              step="0.02"
               value={layout.offsetXCm ?? 0}
               onChange={(event) => setLayout({ ...layout, offsetXCm: Number(event.target.value) })}
             />
@@ -2263,7 +2269,7 @@ const LayoutPanel = memo(function LayoutPanel({
             <Input
               id="offset-y"
               type="number"
-              step="0.05"
+              step="0.02"
               value={layout.offsetYCm ?? 0}
               onChange={(event) => setLayout({ ...layout, offsetYCm: Number(event.target.value) })}
             />
@@ -2534,7 +2540,11 @@ const PrintArea = memo(function PrintArea({
             >
               <div
                 className="flex h-full w-full items-center justify-center"
-                style={{ padding: `${paddingCm}cm`, boxSizing: "border-box" }}
+                style={{
+                  padding: `${paddingCm}cm`,
+                  boxSizing: "border-box",
+                  transform: `translate(${layout.offsetXCm ?? 0}cm, ${layout.offsetYCm ?? 0}cm)`,
+                }}
               >
                 {layout.labelTemplate === "jewellery-split" ? (
                   <JewellerySplitContent
