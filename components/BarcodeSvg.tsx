@@ -39,12 +39,26 @@ export default function BarcodeSvg({
     try {
       const format = detectBarcodeFormat(value);
       const svg = svgRef.current;
+
+      // Dynamically scale bar width for CODE128 so long alphanumeric
+      // SKUs (e.g. KNITAHDBG88979570) fit within the label cell.
+      let barWidth: number;
+      if (format === "EAN13" || format === "EAN8" || format === "UPC") {
+        barWidth = 1.5;
+      } else if (value.length <= 8) {
+        barWidth = 1.5;
+      } else if (value.length <= 14) {
+        barWidth = 1.2;
+      } else {
+        barWidth = 1;
+      }
+
       JsBarcode(svg, value, {
         format,
         displayValue: true,
         height,
         margin: 2,
-        width: format === "EAN13" || format === "EAN8" || format === "UPC" ? 1.5 : 2,
+        width: barWidth,
         fontSize: 10,
         textAlign: "center",
         textPosition: "bottom",
