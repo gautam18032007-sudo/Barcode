@@ -137,18 +137,12 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
     labelKey: "layoutPresetRollJewellery",
     values: {
       paperWidthCm: 10,
-      // 6 labels × 1.5cm = 9cm per editor page
       paperHeightCm: 9,
-      // Each physical sticker prints as its own 100×15mm page so the
-      // printer re-aligns on every label and vertical drift cannot accumulate.
-      printPageHeightCm: 1.5,
       marginCm: 0,
       labelWidthCm: 10,
-      labelHeightCm: 1.5,
+      labelHeightCm: 1.48,
       gapXCm: 0,
-      // Editor-preview spacing between labels; physical printing is per-sticker
-      // (printPageHeightCm), so this gap never shifts the printed output.
-      gapYCm: 1.5,
+      gapYCm: 0,
       cellPaddingCm: 0.05,
       offsetXCm: 0,
       offsetYCm: 0,
@@ -156,7 +150,6 @@ const PRESET_LAYOUTS: { id: string; labelKey: string; values: Partial<LayoutSett
       fontSizePt: 10,
       labelTemplate: "jewellery-split",
       brandText: "ZenZebra",
-      // Per-preset: 6 labels per editor page (scalable for other roll sizes)
       editorLabelsPerPage: 6,
     },
   },
