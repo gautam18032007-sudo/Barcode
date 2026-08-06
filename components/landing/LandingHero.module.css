@@ -1,0 +1,229 @@
+/* LandingHero — Collage layout */
+
+@import "./landing.tokens.css";
+
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+/* Clean base; barcode now lives in a right-side panel */
+
+.grid {
+  display: grid;
+  gap: 3rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+  }
+}
+
+.content {
+  max-width: 38rem;
+  position: relative;
+  z-index: 2;
+}
+
+.kicker {
+  display: inline-block;
+  margin-bottom: 2rem;
+  color: var(--landing-text-subtle);
+}
+
+.title {
+  font-size: clamp(2.5rem, 5vw, 3.75rem);
+  font-weight: 700;
+  line-height: var(--landing-line-tight);
+  letter-spacing: var(--landing-tracking-tight);
+  color: var(--landing-text);
+  margin: 0;
+}
+
+.description {
+  margin-top: 1.5rem;
+  font-size: var(--landing-text-lg);
+  line-height: var(--landing-line-relaxed);
+  color: var(--landing-text-muted);
+  max-width: 32rem;
+}
+
+.ctas {
+  margin-top: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.primaryCta,
+.secondaryCta {
+  border-radius: var(--landing-radius-full);
+  font-weight: 500;
+}
+
+.primaryCta {
+  box-shadow: var(--landing-shadow-sm);
+}
+
+.primaryCta:hover {
+  box-shadow: var(--landing-shadow-md);
+}
+
+.secondaryCta {
+  border-color: var(--landing-border);
+  color: var(--landing-text);
+}
+
+.note {
+  margin-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--landing-text-sm);
+  color: var(--landing-text-muted);
+}
+
+.noteCheck {
+  width: 1rem;
+  height: 1rem;
+  color: #22c55e;
+  flex-shrink: 0;
+}
+
+/* Hero Collage */
+.collageWrap {
+  position: relative;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+/* Barcode panel on the right, with soft fade */
+.collageWrap::before {
+  content: "";
+  position: absolute;
+  top: -1.5rem;
+  right: -2.5rem;
+  bottom: -1.5rem;
+  width: 68%;
+  border-radius: 32px;
+  background-color: #ffffff;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #000 0,
+    #000 22px,
+    transparent 22px,
+    transparent 30px,
+    #000 30px,
+    #000 44px,
+    transparent 44px,
+    transparent 56px
+  );
+  background-size: 220% 220%;
+  background-position: center right;
+  opacity: 1;
+  mask-image: linear-gradient(
+    to left,
+    black 0%,
+    black 65%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    black 0%,
+    black 65%,
+    transparent 100%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Soft white overlay so bars fade out near content */
+.collageWrap::after {
+  content: "";
+  position: absolute;
+  inset: -1.5rem -2.5rem -1.5rem 0;
+  background: linear-gradient(
+    to left,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.7) 45%,
+    transparent 75%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.mockupWrap {
+  position: relative;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  z-index: 1;
+}
+
+.mockupImage {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.15));
+}
+
+/* Floating cards */
+.floatingCard1 {
+  animation: float 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+.floatingCard2 {
+  animation: float 4.5s ease-in-out infinite 1s;
+  z-index: 2;
+}
+
+.floatingCard3 {
+  animation: float 5s ease-in-out infinite 2s;
+  z-index: 2;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(1deg);
+  }
+}
+
+@media (max-width: 1023px) {
+  .collageWrap {
+    position: absolute;
+    inset: 0;
+    align-items: flex-start;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0.22;
+  }
+
+  .mockupWrap {
+    max-width: 520px;
+    transform: translateY(2rem);
+  }
+
+  .mockupImage {
+    filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
+  }
+
+  .floatingCard1,
+  .floatingCard2,
+  .floatingCard3 {
+    display: none;
+  }
+}

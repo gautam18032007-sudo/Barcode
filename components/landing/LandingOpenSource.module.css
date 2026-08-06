@@ -1,0 +1,85 @@
+/* LandingOpenSource — Premium CTA */
+
+@import "./landing.tokens.css";
+
+.openSource {
+  position: relative;
+  overflow: hidden;
+  background: #0b2a52;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding: 3.5rem 2rem;
+  border-radius: var(--landing-radius-2xl);
+  border: 1px solid var(--landing-border);
+  background: linear-gradient(135deg, #fafafa, #ffffff);
+  box-shadow: var(--landing-shadow-lg);
+}
+
+@media (min-width: 640px) {
+  .card {
+    padding: 4rem 3rem;
+  }
+}
+
+.content {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.badge {
+  display: inline-flex;
+}
+
+.title {
+  font-size: var(--landing-text-4xl);
+  font-weight: 700;
+  line-height: var(--landing-line-tight);
+  letter-spacing: var(--landing-tracking-tight);
+  color: var(--landing-text);
+  margin: 0;
+}
+
+.description {
+  max-width: 32rem;
+  font-size: var(--landing-text-lg);
+  line-height: var(--landing-line-relaxed);
+  color: var(--landing-text-muted);
+  margin: 0;
+}
+
+.ctas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border-radius: var(--landing-radius-full);
+  font-weight: 500;
+}
+
+.primaryBtn {
+  box-shadow: var(--landing-shadow-md);
+}
+
+.primaryBtn:hover {
+  box-shadow: var(--landing-shadow-lg);
+}
+
+.credits {
+  font-size: var(--landing-text-sm);
+  color: var(--landing-text-subtle);
+  margin: 0;
+}

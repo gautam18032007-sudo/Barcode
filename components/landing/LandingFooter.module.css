@@ -1,0 +1,105 @@
+/* LandingFooter — Minimal style */
+
+@import "./landing.tokens.css";
+
+.footer {
+  border-top: 1px solid var(--landing-border-light);
+  background: var(--landing-bg);
+  padding: 3.5rem 0 2rem;
+}
+
+.grid {
+  display: grid;
+  gap: 2.5rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    gap: 3rem;
+  }
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.logo {
+  width: 148px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+}
+
+.tagline {
+  font-size: var(--landing-text-sm);
+  line-height: var(--landing-line-relaxed);
+  color: var(--landing-text-muted);
+  margin: 0;
+  max-width: 20rem;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.columnTitle {
+  font-size: var(--landing-text-sm);
+  font-weight: 600;
+  color: var(--landing-text);
+  margin: 0;
+  margin-bottom: 0.25rem;
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link {
+  font-size: var(--landing-text-sm);
+  line-height: 1.5;
+  color: var(--landing-text-muted);
+  text-decoration: none;
+  transition: color var(--landing-transition-fast);
+  display: inline-block;
+}
+
+.link:hover {
+  color: var(--landing-text);
+}
+
+.languageWrap {
+  margin-top: 0.25rem;
+}
+
+.copyright {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--landing-border-light);
+  text-align: center;
+  font-size: var(--landing-text-xs);
+  color: var(--landing-text-subtle);
+}
