@@ -1,0 +1,52 @@
+@import "./landing.tokens.css";
+
+.section {
+  position: relative;
+  overflow: hidden;
+}
+
+.section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+  background-image: var(--landing-barcode-pattern);
+  background-size: var(--landing-barcode-size, 100% 100%);
+  background-position: var(--landing-barcode-position, center);
+  opacity: var(--landing-barcode-opacity, 0.28);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.linesA::before {
+  --landing-barcode-pattern: var(--landing-barcode-pattern-a);
+  --landing-barcode-position: center 25%;
+  --landing-barcode-size: 100% 100%;
+  --landing-barcode-opacity: 0.26;
+}
+
+.linesB::before {
+  --landing-barcode-pattern: var(--landing-barcode-pattern-b);
+  --landing-barcode-position: 60% 50%;
+  --landing-barcode-size: 100% 100%;
+  --landing-barcode-opacity: 0.24;
+}
+
+.linesC::before {
+  --landing-barcode-pattern: var(--landing-barcode-pattern-c);
+  --landing-barcode-position: 40% 70%;
+  --landing-barcode-size: 100% 100%;
+  --landing-barcode-opacity: 0.22;
+}
+
+.section > * {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 640px) {
+  .section::before {
+    opacity: 0.2;
+    background-size: 1100px auto;
+  }
+}

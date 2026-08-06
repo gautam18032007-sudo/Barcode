@@ -1,0 +1,37 @@
+import * as React from "react"
+
+import { cn } from "@/lib/utils"
+
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      className={cn(
+        // Base layout & typography
+        "file:text-foreground placeholder:text-muted-foreground/70",
+        "selection:bg-primary selection:text-primary-foreground",
+        "dark:bg-input/30 border-input",
+        "h-10 w-full min-w-0 rounded-md border bg-transparent px-3 py-2 text-sm",
+        "shadow-xs",
+        // Smooth transition — color, shadow, border in one go
+        "transition-[color,box-shadow,border-color] duration-150 ease-out",
+        "outline-none",
+        // File input
+        "file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium",
+        // Disabled
+        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        // Focus — ring expands smoothly
+        "focus-visible:border-ring focus-visible:ring-ring/40 focus-visible:ring-[3px]",
+        // Hover — subtle border brighten
+        "hover:border-slate-300 dark:hover:border-slate-600",
+        // Validation
+        "aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Input }

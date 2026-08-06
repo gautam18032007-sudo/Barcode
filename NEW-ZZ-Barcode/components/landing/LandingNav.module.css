@@ -1,0 +1,105 @@
+/* LandingNav — Minimal aesthetic */
+
+@import "./landing.tokens.css";
+
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--landing-z-nav);
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: border-color var(--landing-transition-fast), box-shadow var(--landing-transition-fast);
+}
+
+.nav::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--landing-border) 50%, transparent);
+  opacity: 0;
+}
+
+.inner {
+  width: 100%;
+  max-width: var(--landing-max-w);
+  margin: 0 auto;
+  padding-left: var(--landing-container-px);
+  padding-right: var(--landing-container-px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.logo {
+  width: 132px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+}
+
+.logoLink {
+  display: inline-flex;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.githubLink {
+  display: inline-flex;
+  height: 2rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--landing-text-muted);
+  border-radius: var(--landing-radius-full);
+  transition: all var(--landing-transition-fast);
+}
+
+.githubLink:hover {
+  color: var(--landing-text);
+  background: var(--landing-surface);
+}
+
+.githubLink span {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .githubLink span {
+    display: inline;
+  }
+}
+
+.ctaButton {
+  border-radius: var(--landing-radius-full);
+  box-shadow: var(--landing-shadow-sm);
+  font-weight: 500;
+}
+
+.ctaButton:hover {
+  box-shadow: var(--landing-shadow-md);
+}
