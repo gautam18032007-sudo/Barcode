@@ -1,0 +1,12 @@
+{
+  "name": "barecode-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm run dev --prefix NEW-ZZ-Barcode",
+    "build": "npm run build --prefix NEW-ZZ-Barcode",
+    "start": "npm run start --prefix NEW-ZZ-Barcode",
+    "lint": "npm run lint --prefix NEW-ZZ-Barcode",
+    "test": "npm run test --prefix NEW-ZZ-Barcode"
+  }
+}
