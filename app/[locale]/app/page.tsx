@@ -367,7 +367,7 @@ export default function AppPage() {
     } else {
       syncPages(grid.labelsPerPage, pagesToRender);
     }
-  }, [fillAllByQuantity, grid.labelsPerPage, products.length, syncPages]);
+  }, [fillAllByQuantity, grid.labelsPerPage, pagesToRender, products.length, syncPages]);
 
   useEffect(() => {
     let isActive = true;
@@ -410,25 +410,33 @@ export default function AppPage() {
     if (isSessionLoading || hasAutoModeSync) {
       return;
     }
-    if (odooStatus === "connected") {
-      setMode("odoo");
-    }
-    setHasAutoModeSync(true);
+    queueMicrotask(() => {
+      if (odooStatus === "connected") {
+        setMode("odoo");
+      }
+      setHasAutoModeSync(true);
+    });
   }, [hasAutoModeSync, isSessionLoading, odooStatus]);
 
   useEffect(() => {
-    setPreviewPage((current) => Math.min(Math.max(1, current), pagesToRender));
+    queueMicrotask(() => {
+      setPreviewPage((current) => Math.min(Math.max(1, current), pagesToRender));
+    });
   }, [pagesToRender]);
 
   useEffect(() => {
     if (isMobile) {
-      setShowAllPages(false);
+      queueMicrotask(() => {
+        setShowAllPages(false);
+      });
     }
   }, [isMobile]);
 
   useEffect(() => {
     if (selectedCellCount === 0) {
-      setPopoverOpen(false);
+      queueMicrotask(() => {
+        setPopoverOpen(false);
+      });
     }
   }, [selectedCellCount]);
 
@@ -725,7 +733,11 @@ export default function AppPage() {
       }
     }
     trackStartPrint(locale, currentPagesToRender);
-    window.print();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+      });
+    });
   }, [fillAllByQuantity, grid.labelsPerPage, locale, products.length, t]);
 
   const [qzPrinting, setQzPrinting] = useState(false);
@@ -780,7 +792,9 @@ export default function AppPage() {
     }
     const seen = window.localStorage.getItem("labbely:guide");
     if (!seen) {
-      setShowGuideBanner(true);
+      queueMicrotask(() => {
+        setShowGuideBanner(true);
+      });
     }
   }, []);
 

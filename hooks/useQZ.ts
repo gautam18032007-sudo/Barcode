@@ -1,20 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import * as qzService from "@/services/qz";
 
 export const QZ_PRINTER_STORAGE_KEY = "labbely:qzPrinter";
 
 export function useQZ() {
-  const [connected, setConnected] = useState(false);
+  const [connected, setConnected] = useState(() => qzService.isConnected());
   const [connecting, setConnecting] = useState(false);
   const [printers, setPrinters] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setConnected(qzService.isConnected());
-  }, []);
 
   const refreshPrinters = useCallback(async () => {
     try {

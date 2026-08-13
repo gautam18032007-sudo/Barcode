@@ -17,6 +17,8 @@ export type LayoutSettings = {
   nameAlign?: "left" | "center" | "right";
   fontBoldness?: "normal" | "bold" | "extra-bold";
   logoDataUrl?: string;
+  logoPreset?: string;
+  logoPosition?: "inline" | "top";
   logoSize?: number;
 };
 
