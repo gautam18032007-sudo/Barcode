@@ -1128,7 +1128,7 @@ export default function AppPage() {
           </div>
         </div>
       </header>
-      <main className="no-print flex w-full max-w-none flex-col items-stretch gap-0 px-0 py-0 pb-20 lg:pb-0 lg:flex-row">
+      <main className="flex w-full max-w-none flex-col items-stretch gap-0 px-0 py-0 pb-20 lg:pb-0 lg:flex-row">
         <aside className="no-print order-1 hidden w-full lg:block lg:w-96 lg:shrink-0">
           <div className="flex h-full min-h-[calc(100vh-56px)] flex-col space-y-6 border-r border-slate-200 bg-white px-6 py-4">
                         <SidebarContent
