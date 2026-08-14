@@ -152,12 +152,21 @@ body.locale-switching > .locale-transition {
   }
 
   .print-page {
-    page-break-after: always !important;
-    break-after: page !important;
     break-inside: avoid !important;
+    page-break-inside: avoid !important;
     box-sizing: border-box;
     margin: 0;
     overflow: hidden;
+  }
+
+  .print-page:not(:last-child) {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  .print-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
 
   .print-page * {

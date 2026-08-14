@@ -3005,9 +3005,6 @@ const PrintArea = memo(function PrintArea({
             height: `${layout.paperHeightCm}cm`,
             padding: `${layout.marginCm}cm`,
             boxSizing: "border-box",
-            pageBreakAfter: "always",
-            breakAfter: "page",
-            breakInside: "avoid",
           }}
         >
           <div
