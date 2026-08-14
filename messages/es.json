@@ -1,15 +1,15 @@
 {
   "Metadata": {
-    "title": "Labbely — Generador de etiquetas online para productos y códigos",
+    "title": "ZenZebra — Generador de etiquetas online para productos y códigos",
     "description": "Etiquetas con códigos de barras listas para imprimir. Crea hojas A4 y sincroniza productos desde Odoo o modo manual.",
     "keywords": "generador de etiquetas online, etiquetas de códigos de barras, etiquetas de productos, impresión de etiquetas, hojas A4 de etiquetas, etiquetas Odoo, etiquetas de inventario",
     "ogImage": "/brand/mockup-hero.png",
-    "ogImageAlt": "Vista previa del editor de etiquetas Labbely"
+    "ogImageAlt": "Vista previa del editor de etiquetas ZenZebra"
   },
   "Home": {
-    "brand": "Labbely",
+    "brand": "ZenZebra",
     "navOpen": "Abrir app",
-    "homeAriaLabel": "Inicio de Labbely",
+    "homeAriaLabel": "Inicio de ZenZebra",
     "heroTitle": "Etiquetas de códigos. Para cualquier impresora.",
     "heroDescription": "Diseña hojas de etiquetas A4 en tu navegador. Conecta Odoo o añade productos manualmente. Imprime en cualquier impresora estándar. Sin hardware especial.",
     "heroCta": "Empezar gratis",
@@ -54,7 +54,7 @@
     "odooFeature2": "Búsqueda en tiempo real por nombre, código de barras o referencia interna",
     "odooFeature3": "Sin configuración de base de datos - funciona al instante",
     "odooLoginCta": "Conectar Odoo ahora",
-    "useCasesTitle": "¿Quién usa Labbely?",
+    "useCasesTitle": "¿Quién usa ZenZebra?",
     "useCasesSubtitle": "Perfecto para almacenes, tiendas y equipos de inventario",
     "useCase1Title": "Operaciones de almacén",
     "useCase1Description": "Imprime etiquetas para stock entrante, organiza estanterías y rastrea inventario con códigos de barras. Ideal para almacenes pequeños y medianos.",
@@ -64,7 +64,7 @@
     "useCase2ImageAlt": "Inventario",
     "openSourceTitle": "Código abierto y gratis para siempre",
     "openSourceBadge": "Licencia MIT",
-    "openSourceDescription": "Labbely tiene licencia MIT. Haz fork, personalízalo, alójalo tú mismo. Construido con Next.js, Tailwind CSS y shadcn/ui. Desarrollado con Codex 5.2.",
+    "openSourceDescription": "ZenZebra tiene licencia MIT. Haz fork, personalízalo, alójalo tú mismo. Construido con Next.js, Tailwind CSS y shadcn/ui. Desarrollado con Codex 5.2.",
     "openSourceCta": "Dar estrella en GitHub",
     "openSourceSecondaryCta": "Probar la app",
     "openSourceCredits": "Desarrollado con Codex 5.2 · Licencia MIT",
@@ -92,7 +92,7 @@
     "footerResources": "Recursos",
     "footerIssues": "Issues",
     "footerLanguage": "Idioma",
-    "footerCopyright": "© 2026 Labbely · Proyecto de código abierto"
+    "footerCopyright": "© 2026 ZenZebra · Proyecto de código abierto"
   },
   "Common": {
     "language": "Idioma",

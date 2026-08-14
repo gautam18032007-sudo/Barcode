@@ -1,4 +1,4 @@
-# Checklist de Implementación SEO - Labbely
+# Checklist de Implementación SEO - ZenZebra
 
 Fecha: 2026-02-25  
 Propósito: convertir recomendaciones en tareas ejecutables y dejar trazabilidad de implementación real.

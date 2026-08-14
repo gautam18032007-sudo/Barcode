@@ -1,4 +1,4 @@
-﻿
+
 export const SEO_RESOURCE_LOCALE_DEFAULT = "es" as const;
 
 import { locales, type Locale } from "./i18n";
@@ -42,14 +42,14 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
       en: "Online barcode label generator",
     },
     metaTitle: {
-      es: "Generador de etiquetas de código de barras online | Labbely",
-      en: "Online barcode label generator | Labbely",
+      es: "Generador de etiquetas de código de barras online | ZenZebra",
+      en: "Online barcode label generator | ZenZebra",
     },
     metaDescription: {
       es:
-        "Guía práctica para generar etiquetas de código de barras rápidas y listosas para imprimir en hojas A4 con Labbely, ideal para tiendas, almacenes y equipos de inventario.",
+        "Guía práctica para generar etiquetas de código de barras rápidas y listosas para imprimir en hojas A4 con ZenZebra, ideal para tiendas, almacenes y equipos de inventario.",
       en:
-        "Practical guide to generate printable barcode labels on A4 sheets with Labbely. Fast workflows for shop, inventory, and logistics teams.",
+        "Practical guide to generate printable barcode labels on A4 sheets with ZenZebra. Fast workflows for shop, inventory, and logistics teams.",
     },
     summary: {
       es:
@@ -65,12 +65,12 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
         },
         body: {
           es: [
-            "Empieza por definir el formato de tu etiqueta y el tipo de código de barras. En Labbely puedes combinar 4x13, 3x8 y 2x7 por hoja A4 según tu impresora.",
+            "Empieza por definir el formato de tu etiqueta y el tipo de código de barras. En ZenZebra puedes combinar 4x13, 3x8 y 2x7 por hoja A4 según tu impresora.",
             "Añade productos desde Odoo o manualmente, asigna uno por etiqueta y revisa la vista previa antes de imprimir. Así evitas repeticiones o desalineaciones.",
             "Cuando confirmes el resultado, lanza la impresión y revisa el primer pliego en papel barato antes de correr todo el lote.",
           ],
           en: [
-            "Start by selecting label geometry and barcode format. Labbely supports 4x13, 3x8 and 2x7 layouts per A4 sheet.",
+            "Start by selecting label geometry and barcode format. ZenZebra supports 4x13, 3x8 and 2x7 layouts per A4 sheet.",
             "Add products from Odoo or manual mode, fill the grid quickly, and validate the preview before printing to keep quality high.",
             "When everything aligns, print one test sheet first, then generate the full batch once spacing and margins are correct.",
           ],
@@ -293,12 +293,12 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
       en: "odoo-17-integration",
     },
     title: {
-      es: "Integración de Labbely con Odoo 17",
-      en: "Labbely integration with Odoo 17",
+      es: "Integración de ZenZebra con Odoo 17",
+      en: "ZenZebra integration with Odoo 17",
     },
     metaTitle: {
-      es: "Integración Odoo 17 para etiquetas | Labbely",
-      en: "Odoo 17 integration for labels | Labbely",
+      es: "Integración Odoo 17 para etiquetas | ZenZebra",
+      en: "Odoo 17 integration for labels | ZenZebra",
     },
     metaDescription: {
       es:
@@ -319,7 +319,7 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
         body: {
           es: [
             "Usa una URL de Odoo válida, base de datos y credenciales con acceso de lectura al catálogo de productos.",
-            "Haz login en Labbely una vez por sesión de trabajo para evitar autenticación repetida y mantener privacidad.",
+            "Haz login en ZenZebra una vez por sesión de trabajo para evitar autenticación repetida y mantener privacidad.",
             "Verifica que el estado quede en conectado antes de editar etiquetas, así trabajas sobre datos actuales.",
           ],
           en: [
@@ -491,8 +491,8 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
     faqs: [
       {
         question: {
-          es: "¿Puedo usar Labbely para auditoría de inventario física?",
-          en: "Can I use Labbely for physical inventory audits?",
+          es: "¿Puedo usar ZenZebra para auditoría de inventario física?",
+          en: "Can I use ZenZebra for physical inventory audits?",
         },
         answer: {
           es:
@@ -542,8 +542,8 @@ const SEO_RESOURCES: Record<string, SeoResource> = {
       en: "Retail label templates",
     },
     metaTitle: {
-      es: "Etiquetas para retail y punto de venta | Labbely",
-      en: "Retail and POS label templates | Labbely",
+      es: "Etiquetas para retail y punto de venta | ZenZebra",
+      en: "Retail and POS label templates | ZenZebra",
     },
     metaDescription: {
       es:
@@ -698,8 +698,8 @@ export const getAllResourceStaticParams = () =>
 
 export const getLocalizedHubTitle = (locale: Locale) => {
   const base = {
-    es: "Recursos de Labbely",
-    en: "Labbely Resources",
+    es: "Recursos de ZenZebra",
+    en: "ZenZebra Resources",
   } as const;
   return base[locale];
 };

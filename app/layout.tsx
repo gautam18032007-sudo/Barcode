@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Labbely",
+  title: "ZenZebra",
   description: "Print-ready barcode labels for Odoo or manual workflows.",
   icons: {
     icon: [

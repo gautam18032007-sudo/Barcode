@@ -311,8 +311,8 @@ const BLOG_POSTS: SeoBlogPost[] = [
     faqs: [
       {
         question: {
-          es: "¿Es seguro trabajar con Odoo open source y Labbely?",
-          en: "Is it safe to use Labbely with open-source Odoo?",
+          es: "¿Es seguro trabajar con Odoo open source y ZenZebra?",
+          en: "Is it safe to use ZenZebra with open-source Odoo?",
         },
         answer: {
           es:

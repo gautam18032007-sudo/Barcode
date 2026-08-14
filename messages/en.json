@@ -1,15 +1,15 @@
 {
   "Metadata": {
-    "title": "Labbely — Online label generator for products and barcodes",
+    "title": "ZenZebra — Online label generator for products and barcodes",
     "description": "Print-ready barcode labels. Build A4 sheets and sync products from Odoo or manual entries.",
     "keywords": "online label generator, barcode labels, product labels, label printing, A4 label sheets, Odoo labels, inventory labels",
     "ogImage": "/brand/mockup-hero.png",
-    "ogImageAlt": "Labbely label editor preview"
+    "ogImageAlt": "ZenZebra label editor preview"
   },
   "Home": {
-    "brand": "Labbely",
+    "brand": "ZenZebra",
     "navOpen": "Open app",
-    "homeAriaLabel": "Labbely home",
+    "homeAriaLabel": "ZenZebra home",
     "heroTitle": "Barcode labels. For any printer.",
     "heroDescription": "Design A4 label sheets in your browser. Connect Odoo or add products manually. Print on any standard printer. No special hardware needed.",
     "heroCta": "Start for free",
@@ -54,7 +54,7 @@
     "odooFeature2": "Real-time search by product name, barcode, or internal reference",
     "odooFeature3": "No database configuration required - works instantly",
     "odooLoginCta": "Connect Odoo now",
-    "useCasesTitle": "Who uses Labbely?",
+    "useCasesTitle": "Who uses ZenZebra?",
     "useCasesSubtitle": "Perfect for warehouses, shops, and inventory teams",
     "useCase1Title": "Warehouse operations",
     "useCase1Description": "Print labels for incoming stock, organize shelves, and track inventory with barcodes. Ideal for small to medium warehouses.",
@@ -64,7 +64,7 @@
     "useCase2ImageAlt": "Inventory",
     "openSourceTitle": "Open source & free forever",
     "openSourceBadge": "MIT License",
-    "openSourceDescription": "Labbely is MIT licensed. Fork it, customize it, self-host it. Built with Next.js, Tailwind CSS, and shadcn/ui. Powered by Codex 5.2.",
+    "openSourceDescription": "ZenZebra is MIT licensed. Fork it, customize it, self-host it. Built with Next.js, Tailwind CSS, and shadcn/ui. Powered by Codex 5.2.",
     "openSourceCta": "Star on GitHub",
     "openSourceSecondaryCta": "Try the app",
     "openSourceCredits": "Built with Codex 5.2 · Licensed under MIT",
@@ -92,7 +92,7 @@
     "footerResources": "Resources",
     "footerIssues": "Issues",
     "footerLanguage": "Language",
-    "footerCopyright": "© 2026 Labbely · Open source project"
+    "footerCopyright": "© 2026 ZenZebra · Open source project"
   },
   "Common": {
     "language": "Language",

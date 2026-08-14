@@ -1,8 +1,8 @@
-# Labbely
+# ZenZebra
 
 **Print-ready barcode labels.**
 
-Labbely is a **web-based barcode label generator** for companies. It lets you build print-ready A4 label sheets in the browser (using a grid/layout), assign products to labels, and print them on **conventional printers** to support inventory workflows.
+ZenZebra is a **web-based barcode label generator** for companies. It lets you build print-ready A4 label sheets in the browser (using a grid/layout), assign products to labels, and print them on **conventional printers** to support inventory workflows.
 
 It includes an optional **Odoo 17 JSON-RPC integration** to search products (by `name`, `barcode`, `default_code`) and import them into the label editor.
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,15 @@ import {
 } from "@/lib/import/barcodeGenerator";
 import { buildProducts, parseWorkbook } from "@/lib/import/importPipeline";
 
+const emptySubscribe = () => () => {};
+function useIsHydrated() {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
+}
+
 export default function ExcelImport() {
   const importProducts = useEditorStore((state) => state.importProducts);
   const layout = useEditorStore((state) => state.layout);
@@ -23,12 +32,14 @@ export default function ExcelImport() {
   const [busy, setBusy] = useState(false);
   // Re-derived whenever products change or after an import (bump).
   const [bump, setBump] = useState(0);
+  const isHydrated = useIsHydrated();
 
   const nextNumber = useMemo(() => {
     void bump;
     const existingCodes = products.flatMap((product) => [product.barcode, product.sku]);
-    return Math.max(loadPersistedHighest(), highestZzNumber(existingCodes)) + 1;
-  }, [products, bump]);
+    const persisted = isHydrated ? loadPersistedHighest() : 0;
+    return Math.max(persisted, highestZzNumber(existingCodes)) + 1;
+  }, [products, bump, isHydrated]);
 
   const handleFile = async (file: File) => {
     setBusy(true);
@@ -92,7 +103,7 @@ export default function ExcelImport() {
       />
       <div className="flex items-center justify-between text-[11px] text-slate-500">
         <span>
-          Next generated: <span className="font-mono">{formatBarcode(nextNumber)}</span>
+          Next generated: <span className="font-mono" suppressHydrationWarning>{formatBarcode(nextNumber)}</span>
         </span>
         <Button
           type="button"

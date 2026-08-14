@@ -1,4 +1,4 @@
-# Mejora SEO y Posicionamiento - Labbely
+# Mejora SEO y Posicionamiento - ZenZebra
 
 Fecha: 2026-02-25  
 Sitio base: `/{locale}` en Next.js + `next-intl`  
