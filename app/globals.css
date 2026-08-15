@@ -128,8 +128,8 @@ body.locale-switching > .locale-transition {
 
   html,
   body {
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
     box-sizing: border-box;
   }
 
@@ -138,8 +138,21 @@ body.locale-switching > .locale-transition {
     color: #000000;
   }
 
-  .no-print {
+  .no-print,
+  .toaster,
+  [data-sonner-toaster],
+  [data-sonner-toast],
+  [role="status"],
+  [role="alert"],
+  [data-radix-portal],
+  [data-radix-popper-content-wrapper] {
     display: none !important;
+  }
+
+  body > div {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
   }
 
   .print-only {
@@ -147,17 +160,26 @@ body.locale-switching > .locale-transition {
     position: static !important;
     width: 100%;
     height: auto;
-    margin: 0;
-    padding: 0;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   .print-page {
-    page-break-after: always !important;
-    break-after: page !important;
     break-inside: avoid !important;
+    page-break-inside: avoid !important;
     box-sizing: border-box;
-    margin: 0;
+    margin: 0 !important;
     overflow: hidden;
+  }
+
+  .print-page:not(:last-child) {
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+
+  .print-page:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
 
   .print-page * {
