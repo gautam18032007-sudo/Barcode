@@ -23,6 +23,7 @@ export const metadata: Metadata = {
   description: "Print-ready barcode labels for Odoo or manual workflows.",
   icons: {
     icon: [
+      { url: "/favicon.ico" },
       { url: "/brand/labbely-icon.png", sizes: "16x16", type: "image/png" },
       { url: "/brand/labbely-icon.png", sizes: "32x32", type: "image/png" },
       { url: "/brand/labbely-icon.png", sizes: "512x512", type: "image/png" },
