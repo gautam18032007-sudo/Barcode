@@ -28,13 +28,13 @@ export async function generateMetadata({
 
   return {
     metadataBase: new URL(baseUrl),
-    applicationName: "Labbely",
+    applicationName: "ZenZebra",
     title: t("title"),
     description: t("description"),
     keywords: t("keywords").split(",").map((keyword) => keyword.trim()),
     category: "Business",
-    creator: "Labbely",
-    publisher: "Labbely",
+    creator: "ZenZebra",
+    publisher: "ZenZebra",
     robots: {
       index: true,
       follow: true,
@@ -45,7 +45,7 @@ export async function generateMetadata({
     openGraph: {
       title: t("title"),
       description: t("description"),
-      siteName: "Labbely",
+      siteName: "ZenZebra",
       locale: ogLocale,
       alternateLocale: [alternateOgLocale],
       type: "website",

@@ -14,7 +14,7 @@ export async function generateMetadata({
   const locale = isLocale(resolvedParams.locale) ? resolvedParams.locale : defaultLocale;
 
   return {
-    title: "Labbely Login",
+    title: "ZenZebra Login",
     robots: {
       index: false,
       follow: false,

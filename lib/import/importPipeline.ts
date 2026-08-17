@@ -7,6 +7,7 @@
 // `buildProducts` is pure given a sequence, so the whole pipeline is unit
 // testable without a real file. `parseWorkbook` isolates the SheetJS I/O.
 
+import type { MasterLookupResult } from "../productBarcodeMaster";
 import type { BarcodeSequence } from "./barcodeGenerator";
 import { detectHeaders } from "./headerDetection";
 import { resolveIdentities } from "./identityResolver";
@@ -14,14 +15,14 @@ import { mapRows } from "./rowMapper";
 
 export type ImportedProduct = {
   name: string;
-  /** Provided SKU only. Generated codes live on `barcode`, not here, to avoid
+  /** Provided SKU or master barcode only. Generated codes live on `barcode`, not here, to avoid
    *  a redundant "ZZ… <name>" line on the label. */
   sku?: string;
   barcode: string;
   price?: number;
   brand?: string;
   copies: number;
-  /** True when the barcode was auto-generated (no SKU in the sheet). */
+  /** True when the barcode was auto-generated (no SKU in the sheet and no master match). */
   generated: boolean;
 };
 
@@ -29,31 +30,48 @@ export type ImportResult = {
   products: ImportedProduct[];
   totalCopies: number;
   generatedCount: number;
+  masterMatchedCount: number;
 };
 
-/** Pure: records + a barcode sequence → finished products. */
+/** Pure: records + a barcode sequence + optional master lookup → finished products. */
 export const buildProducts = (
   records: Record<string, unknown>[],
   sequence: BarcodeSequence,
+  masterLookup?: (productName: string) => MasterLookupResult | undefined,
 ): ImportResult => {
   const headers = detectHeaders(records[0] ? Object.keys(records[0]) : []);
   const identities = resolveIdentities(mapRows(records, headers));
 
   let generatedCount = 0;
+  let masterMatchedCount = 0;
+
   const products: ImportedProduct[] = identities.map((identity) => {
     const hasSku = Boolean(identity.sku);
-    const barcode = hasSku ? (identity.sku as string) : sequence.reserve();
-    if (!hasSku) {
-      generatedCount += 1;
+    let barcode: string;
+    let isGenerated = false;
+
+    if (hasSku) {
+      barcode = String(identity.sku);
+    } else {
+      const masterResult = masterLookup ? masterLookup(identity.name) : undefined;
+      if (masterResult && masterResult.found && masterResult.barcode) {
+        barcode = String(masterResult.barcode);
+        masterMatchedCount += 1;
+      } else {
+        barcode = sequence.reserve();
+        isGenerated = true;
+        generatedCount += 1;
+      }
     }
+
     return {
       name: identity.name,
-      sku: identity.sku,
+      sku: identity.sku || (isGenerated ? undefined : barcode),
       barcode,
       price: identity.price,
       brand: identity.brand,
       copies: identity.copies,
-      generated: !hasSku,
+      generated: isGenerated,
     };
   });
 
@@ -61,6 +79,7 @@ export const buildProducts = (
     products,
     totalCopies: products.reduce((sum, product) => sum + product.copies, 0),
     generatedCount,
+    masterMatchedCount,
   };
 };
 

@@ -21,12 +21,14 @@ import { toast } from "sonner";
 
 import BarcodeSvg from "@/components/BarcodeSvg";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import ThemeToggle from "@/components/ThemeToggle";
 import PrintPageStyle from "@/components/PrintPageStyle";
 import PrinterSelector from "@/components/PrinterSelector";
 import ExcelImport from "@/components/ExcelImport";
 import { getSavedPrinter } from "@/hooks/useQZ";
 import { printRaw, QzError } from "@/services/qz";
 import { generateTsplBatch, type TsplLabel } from "@/lib/tspl";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +41,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -223,7 +233,6 @@ export default function AppPage() {
   const tCommon = useTranslations("Common");
   const isMobile = useIsMobile();
   const previewScale = isMobile ? 0.6 : 1;
-  const logoSrc = "/brand/labbely-logo.png";
   
   const layout = useEditorStore((state) => state.layout);
   const pages = useEditorStore((state) => state.pages);
@@ -444,7 +453,7 @@ export default function AppPage() {
     const path = `/${locale}/app`;
     trackPageView(locale, path, "view_app", {
       page_location: path,
-      page_title: "Editor - Labbely",
+      page_title: "Editor - ZenZebra",
     });
   }, [locale]);
 
@@ -923,16 +932,16 @@ export default function AppPage() {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       {isSessionLoading ? (
-        <div className="fixed inset-0 z-[900] bg-white">
+        <div className="fixed inset-0 z-[900] bg-background text-foreground">
           <div className="flex min-h-svh flex-col items-center justify-center gap-6 px-6 text-center">
             <Image
-              src="/brand/labbely-icon.png"
-              alt="Labbely"
+              src="/brand/zebra-logo.png"
+              alt="ZenZebra"
               width={56}
               height={56}
-              className="h-14 w-14"
+              className="h-14 w-14 object-contain"
               priority
               sizes="56px"
             />
@@ -950,26 +959,27 @@ export default function AppPage() {
       <div
         className={`transition-opacity duration-150 ${isSessionLoading ? "opacity-0" : "opacity-100"}`}
       >
-        <header className="no-print border-b border-slate-200 bg-white px-6 py-4 sm:px-8">
+        <header className="no-print border-b border-border bg-card text-card-foreground px-6 py-4 sm:px-8">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center justify-between gap-3">
-            <Link href={`/${locale}`} aria-label="Labbely home">
+            <Link href={`/${locale}`} aria-label="ZenZebra home" className="flex items-center cursor-pointer">
               <Image
-                src={logoSrc}
-                alt="Labbely"
-                width={200}
-                height={48}
-                className="h-8 w-auto"
-                sizes="200px"
+                src="/brand/zebra-logo.png"
+                alt="ZenZebra"
+                width={140}
+                height={36}
+                className="h-8 w-auto object-contain"
+                sizes="140px"
               />
             </Link>
             <div className="flex items-center gap-2 sm:hidden">
               <LanguageSwitcher />
+              <ThemeToggle />
               <a
                 href="https://github.com/dani-mas/labbely"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition hover:bg-slate-100"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border text-foreground transition hover:bg-muted"
                 aria-label={tCommon("github")}
               >
                 <Github className="h-4 w-4" />
@@ -983,7 +993,7 @@ export default function AppPage() {
                   href="https://github.com/dani-mas/labbely"
                   target="_blank"
                   rel="noreferrer"
-                  className="hidden h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-600 transition hover:bg-slate-100 sm:inline-flex"
+                  className="hidden h-9 w-9 items-center justify-center rounded-md border border-border text-foreground transition hover:bg-muted sm:inline-flex"
                   aria-label={tCommon("github")}
                 >
                   <Github className="h-4 w-4" />
@@ -993,13 +1003,13 @@ export default function AppPage() {
             </Tooltip>
             {isMobile ? (
               <>
-                <div className="flex w-full items-center rounded-full border border-slate-200 bg-white p-1 shadow-sm">
+                <div className="flex w-full items-center rounded-full border border-border bg-card p-1 shadow-sm">
                   <Drawer>
                     <DrawerTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex-1 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                        className="flex-1 rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
                       >
                         {t("mobileProducts")}
                       </Button>
@@ -1060,13 +1070,13 @@ export default function AppPage() {
                       </ScrollArea>
                     </DrawerContent>
                   </Drawer>
-                  <span className="mx-1 h-5 w-px bg-slate-200" />
+                  <span className="mx-1 h-5 w-px bg-border" />
                   <Drawer>
                     <DrawerTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="flex-1 rounded-full px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                        className="flex-1 rounded-full px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted"
                       >
                         {t("layoutTitle")}
                       </Button>
@@ -1095,10 +1105,11 @@ export default function AppPage() {
                 </div>
               </>
             ) : null}
-            <div className="hidden sm:block">
+            <div className="hidden sm:flex sm:items-center sm:gap-2">
               <LanguageSwitcher />
+              <ThemeToggle />
             </div>
-            <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:inline-flex" />
+            <span className="mx-1 hidden h-5 w-px bg-border sm:inline-flex" />
             <div className="hidden items-center gap-1 sm:flex">
               <Button variant="ghost" size="sm" onClick={undo}>
                 {t("undo")}
@@ -1110,7 +1121,7 @@ export default function AppPage() {
                 {t("clearAll")}
               </Button>
             </div>
-            <span className="mx-1 hidden h-5 w-px bg-slate-200 sm:inline-flex" />
+            <span className="mx-1 hidden h-5 w-px bg-border sm:inline-flex" />
             {layout.labelTemplate === "jewellery-split" ? (
               <Button
                 variant="outline"
@@ -1128,9 +1139,9 @@ export default function AppPage() {
           </div>
         </div>
       </header>
-      <main className="no-print flex w-full max-w-none flex-col items-stretch gap-0 px-0 py-0 pb-20 lg:pb-0 lg:flex-row">
+      <main className="no-print flex w-full max-w-none flex-col items-stretch gap-0 px-0 py-0 pb-20 lg:pb-0 lg:flex-row bg-background text-foreground">
         <aside className="no-print order-1 hidden w-full lg:block lg:w-96 lg:shrink-0">
-          <div className="flex h-full min-h-[calc(100vh-56px)] flex-col space-y-6 border-r border-slate-200 bg-white px-6 py-4">
+          <div className="flex h-full min-h-[calc(100vh-56px)] flex-col space-y-6 border-r border-border bg-card text-card-foreground px-6 py-4">
                         <SidebarContent
                           mode={mode}
                           onModeChange={handleModeChange}
@@ -1176,26 +1187,26 @@ export default function AppPage() {
             />
           </div>
         </aside>
-        <section className="no-print order-2 flex-1 space-y-4 px-6 py-4">
+        <section className="no-print order-2 flex-1 space-y-4 px-6 py-4 bg-background text-foreground">
           {showGuideBanner ? (
-            <div className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+            <Alert className="border-border bg-card text-card-foreground">
+              <div className="flex flex-wrap items-center justify-between gap-3 w-full">
                 <div>
-                  <p className="font-semibold text-slate-900">{t("guideTitle")}</p>
-                  <p className="text-xs text-slate-500">{t("guideDescription")}</p>
+                  <AlertTitle className="text-sm font-semibold text-foreground">{t("guideTitle")}</AlertTitle>
+                  <AlertDescription className="text-xs text-muted-foreground">{t("guideDescription")}</AlertDescription>
                 </div>
                 <Button variant="outline" size="sm" onClick={dismissGuide}>
                   {t("guideDismiss")}
                 </Button>
               </div>
-            </div>
+            </Alert>
           ) : null}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-500">
+              <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
                 {t("preview")}
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 {t("gridSummary", {
                   columns: grid.columns,
                   rows: grid.rows,
@@ -1206,21 +1217,21 @@ export default function AppPage() {
                 const totalAssigned = Array.from(assignedCounts.values()).reduce((s, c) => s + c, 0);
                 const printPages = pagesToRender;
                 return (
-                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                  <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     <span>{t("statsProducts", { count: products.length })}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-border">•</span>
                     <span>{t("statsLabels", { count: totalAssigned })}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-border">•</span>
                     <span>{t("statsLabelsPerPage", { count: grid.labelsPerPage })}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-border">•</span>
                     <span>{t("statsEditorPages", { count: pagesToRender })}</span>
-                    <span className="text-slate-300">•</span>
+                    <span className="text-border">•</span>
                     <span>{t("statsPrintPages", { count: printPages })}</span>
                   </div>
                 );
               })()}
             </div>
-            <div className="flex flex-col gap-2 text-xs text-slate-500 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2 text-xs text-muted-foreground sm:flex-row sm:items-center">
               {!isMobile ? (
                 <span>
                   {t("layoutSummary", {
@@ -1263,12 +1274,12 @@ export default function AppPage() {
             </div>
           </div>
           {isMobile ? (
-            <div className="space-y-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm">
-              <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+            <div className="space-y-3 rounded-lg border border-border bg-card text-card-foreground px-3 py-3 text-sm">
+              <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                 {t("productsAdded")}
               </div>
               {products.length === 0 ? (
-                <p className="text-xs text-slate-500">{t("productsAddedEmpty")}</p>
+                <p className="text-xs text-muted-foreground">{t("productsAddedEmpty")}</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {products.map((product) => (
@@ -1285,8 +1296,8 @@ export default function AppPage() {
                 </div>
               )}
               {activeProductId ? (
-                <div className="space-y-2 border-t border-slate-200 pt-3">
-                  <div className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                <div className="space-y-2 border-t border-border pt-3">
+                  <div className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                     {t("quickActions")}
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -1318,7 +1329,7 @@ export default function AppPage() {
                       value={mobileFillCount}
                       onChange={(event) => setMobileFillCount(event.target.value)}
                       placeholder={t("customQuantity")}
-                      className="h-8 w-24 text-xs"
+                      className="h-8 w-24 text-xs bg-background"
                     />
                     <Button
                       size="sm"
@@ -1331,7 +1342,7 @@ export default function AppPage() {
                     >
                       {t("applyQuantity")}
                     </Button>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {t("labelsCount", {
                         count: mobileFillCount ? Number(mobileFillCount) : 0,
                       })}
@@ -1350,14 +1361,14 @@ export default function AppPage() {
               <span>{t("hintToggle")}</span>
               <Kbd>Esc</Kbd>
               <span>{t("hintClear")}</span>
-              <span className="text-slate-400">·</span>
+              <span className="text-border">·</span>
               <span>{t("printHint")}</span>
             </div>
           ) : null}
           {selectedCellCount > 0 ? (
-            <div className="hidden flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs sm:flex">
+            <div className="hidden flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card text-card-foreground px-3 py-2 text-xs sm:flex">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold text-slate-700">
+                <span className="font-semibold text-foreground">
                   {t("selectionCount", { count: selectedCellCount })}
                 </span>
                 {activeProduct ? (
@@ -1381,7 +1392,7 @@ export default function AppPage() {
             {previewPages.map((page) => {
               const pageIndex = pageIndexById.get(page.id) ?? 0;
               return (
-              <div key={page.id} className="overflow-auto border border-slate-200 bg-white p-4 sm:p-6">
+              <div key={page.id} className="overflow-auto border border-border bg-card p-4 sm:p-6 shadow-xs rounded-md">
                 <div
                   className="relative mx-auto"
                   style={{
@@ -1474,10 +1485,10 @@ export default function AppPage() {
           </div>
         </section>
         <aside className="no-print order-3 hidden w-full lg:block lg:w-80 lg:shrink-0">
-          <div className="flex h-full min-h-[calc(100vh-56px)] flex-col space-y-6 border-l border-slate-200 bg-white px-6 py-4">
+          <div className="flex h-full min-h-[calc(100vh-56px)] flex-col space-y-6 border-l border-border bg-card text-card-foreground px-6 py-4">
             <Collapsible open={layoutOpen} onOpenChange={setLayoutOpen}>
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+                <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
                   {t("layoutTitle")}
                 </h3>
                 <CollapsibleTrigger asChild>
@@ -1500,7 +1511,7 @@ export default function AppPage() {
           </div>
         </aside>
       </main>
-      <div className="no-print lg:hidden fixed bottom-0 inset-x-0 border-t border-slate-200 bg-white px-4 py-3">
+      <div className="no-print lg:hidden fixed bottom-0 inset-x-0 border-t border-border bg-card text-card-foreground px-4 py-3">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" className="flex-1" onClick={clearAll}>
             {t("clearAll")}
@@ -1540,15 +1551,15 @@ export default function AppPage() {
         paddingCm={cellPaddingCm}
       />
       <div className="no-print mx-auto max-w-[1600px] px-6 pb-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 pt-4 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4 text-xs text-muted-foreground">
           <div className="flex flex-wrap items-center gap-2">
             <span>{t("selectedLabels")}</span>
             <Badge variant="brand">{selectedCellCount}</Badge>
             <span>{t("activeProduct")}</span>
-            <span className="font-semibold text-slate-800">
+            <span className="font-semibold text-foreground">
               {activeProduct ? activeProduct.name : t("none")}
             </span>
-            <span className="text-slate-300">•</span>
+            <span className="text-border">•</span>
             <span>{t("selectionHint")}</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -1602,124 +1613,128 @@ const ProductCard = memo(function ProductCard({
   }
 
   return (
-    <div
-      className={`relative rounded-lg border px-3 py-2 text-xs select-none transition-colors hover:border-primary/30 ${
-        active ? "border-primary/40 bg-primary/5" : "border-slate-200"
+    <Card
+      className={`relative select-none transition-colors hover:border-primary/40 cursor-pointer shadow-xs ${
+        active ? "border-primary/50 bg-primary/10 ring-1 ring-primary/30 text-card-foreground" : "border-border bg-card text-card-foreground hover:border-border"
       }`}
       onClick={onSelect}
       onKeyDown={(event) => event.key === "Enter" && onSelect()}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="absolute right-2 top-2 h-8 w-8 text-slate-400 hover:text-rose-600"
-        onClick={(event) => {
-          event.stopPropagation();
-          onRemove();
-        }}
-        aria-label={t("removeProduct")}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-semibold text-slate-800 truncate">{product.name}</p>
-        <Badge variant="secondary" title={t("assignedCount", { count: assignedCount })}>
-          {assignedCount}
-        </Badge>
-      </div>
-      <p className="text-slate-500 text-[10px] font-mono">
-        {t("barcodeLabel")} {product.barcode || t("notAvailable")}
-      </p>
-      <div
-        className="mt-1 flex items-center gap-1"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <Label htmlFor={`price-${product.id}`} className="text-[10px] text-slate-500">
-          {t("sellingPrice")} ₹
-        </Label>
-        <Input
-          id={`price-${product.id}`}
-          type="number"
-          min={0}
-          step="0.01"
-          value={product.price ?? ""}
-          placeholder="0"
-          className="h-7 w-24 text-[11px]"
-          onChange={(event) => {
-            const raw = event.target.value;
-            const parsed = Number(raw);
-            onPriceChange(raw === "" || !Number.isFinite(parsed) ? undefined : parsed);
+      <CardHeader className="p-3 pb-1 space-y-1 relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-2 top-2 h-7 w-7 text-muted-foreground hover:text-rose-600 hover:bg-rose-500/10"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRemove();
           }}
-        />
-      </div>
-      <div className="mt-2 space-y-2">
-        <div className="flex gap-2">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-[10px] h-9"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onFillNext();
-                }}
-              >
-                {t("fillNext")}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("fillNextHint")}</TooltipContent>
-          </Tooltip>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-[10px] h-9"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  onFillAll();
-                }}
-              >
-                {t("fillAllPages")}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("fillAllHint")}</TooltipContent>
-          </Tooltip>
+          aria-label={t("removeProduct")}
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+        <div className="flex items-center justify-between gap-2 pr-6">
+          <CardTitle className="font-semibold text-xs text-foreground truncate">{product.name}</CardTitle>
+          <Badge variant={active ? "default" : "secondary"} className="h-5 px-1.5 text-[10px]" title={t("assignedCount", { count: assignedCount })}>
+            {assignedCount}
+          </Badge>
         </div>
-        <div className="flex gap-2">
+        <p className="text-muted-foreground text-[10px] font-mono">
+          {t("barcodeLabel")} {product.barcode || t("notAvailable")}
+        </p>
+      </CardHeader>
+      <CardContent className="p-3 pt-1 space-y-2">
+        <div
+          className="flex items-center gap-1.5"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Label htmlFor={`price-${product.id}`} className="text-[10px] text-muted-foreground font-medium">
+            {t("sellingPrice")} ₹
+          </Label>
           <Input
-            className="h-9 w-16 text-[10px]"
+            id={`price-${product.id}`}
             type="number"
-            min={1}
-            value={quantity}
-            onClick={(event) => event.stopPropagation()}
+            min={0}
+            step="0.01"
+            value={product.price ?? ""}
+            placeholder="0"
+            className="h-7 w-24 text-[11px]"
             onChange={(event) => {
-              const val = Number(event.target.value) || 1;
-              setQuantity(val);
-              onQuantityChange(val);
+              const raw = event.target.value;
+              const parsed = Number(raw);
+              onPriceChange(raw === "" || !Number.isFinite(parsed) ? undefined : parsed);
             }}
           />
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 text-[10px] h-9"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  const safeQty = Number.isFinite(quantity) ? Math.max(1, quantity) : 1;
-                  onFillMany(safeQty);
-                }}
-              >
-                {t("fillCount", { count: quantity })}
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>{t("fillCountHint")}</TooltipContent>
-          </Tooltip>
         </div>
-      </div>
-    </div>
+        <div className="space-y-1.5 pt-1">
+          <div className="flex gap-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-[10px] h-8 px-2"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onFillNext();
+                  }}
+                >
+                  {t("fillNext")}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("fillNextHint")}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-[10px] h-8 px-2"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onFillAll();
+                  }}
+                >
+                  {t("fillAllPages")}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("fillAllHint")}</TooltipContent>
+            </Tooltip>
+          </div>
+          <div className="flex gap-1.5">
+            <Input
+              className="h-8 w-16 text-[10px] text-center"
+              type="number"
+              min={1}
+              value={quantity}
+              onClick={(event) => event.stopPropagation()}
+              onChange={(event) => {
+                const val = Number(event.target.value) || 1;
+                setQuantity(val);
+                onQuantityChange(val);
+              }}
+            />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-[10px] h-8 px-2"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    const safeQty = Number.isFinite(quantity) ? Math.max(1, quantity) : 1;
+                    onFillMany(safeQty);
+                  }}
+                >
+                  {t("fillCount", { count: quantity })}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("fillCountHint")}</TooltipContent>
+            </Tooltip>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 });
 
@@ -1830,26 +1845,28 @@ const SidebarContent = memo(function SidebarContent({
 
   return (
     <>
-      <Tabs value={mode} onValueChange={onModeChange}>
-        <div className="space-y-2">
-          <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2 space-y-1">
+          <CardTitle className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
             {t("mode")}
-          </h2>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="odoo" className="cursor-pointer">
-              {t("modeOdoo")}
-            </TabsTrigger>
-            <TabsTrigger value="manual" className="cursor-pointer">
-              {t("modeManual")}
-            </TabsTrigger>
-          </TabsList>
-          <p className="text-xs text-muted-foreground">
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
             {mode === "odoo" ? t("modeOdooHelp") : t("modeManualHelp")}
-          </p>
-        </div>
-        <TabsContent value="odoo" className="mt-4 space-y-2">
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <Tabs value={mode} onValueChange={onModeChange}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="odoo" className="cursor-pointer text-xs">
+                {t("modeOdoo")}
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="cursor-pointer text-xs">
+                {t("modeManual")}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="odoo" className="mt-3 space-y-2.5">
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-2 text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border bg-muted/40 px-2 py-2 text-xs text-foreground">
               <span className="text-slate-600">{t("odooConnection")}</span>
               <div className="flex items-center gap-2">
                 <Badge variant={odooStatus === "connected" ? "brand" : "secondary"}>
@@ -2013,11 +2030,13 @@ const SidebarContent = memo(function SidebarContent({
           </div>
         </TabsContent>
       </Tabs>
+        </CardContent>
+      </Card>
       <ExcelImport />
       {!isMobile ? (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+            <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               {t("products")}
             </h3>
             <div className="flex items-center gap-1.5">
@@ -2027,18 +2046,18 @@ const SidebarContent = memo(function SidebarContent({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-[10px] text-slate-500 hover:text-slate-700 hover:bg-slate-100 font-medium px-1.5 py-0 cursor-pointer"
+                    className="h-7 text-[10px] text-muted-foreground hover:text-foreground font-medium px-1.5 py-0 cursor-pointer"
                     onClick={clearUnassignedCells}
                     title="Remove all labels from pages whose products are not in the list"
                   >
                     {t("clearUnassigned")}
                   </Button>
-                  <span className="text-slate-300 text-[10px]">|</span>
+                  <span className="text-border text-[10px]">|</span>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-[10px] text-rose-600 hover:text-rose-700 hover:bg-rose-50 font-medium px-1.5 py-0 cursor-pointer disabled:opacity-40 disabled:hover:bg-transparent"
+                    className="h-7 text-[10px] text-rose-600 dark:text-rose-400 hover:text-rose-700 font-medium px-1.5 py-0 cursor-pointer disabled:opacity-40"
                     disabled={totalAssignedLabels === 0}
                     onClick={() => setClearAllDialogOpen(true)}
                     title="Remove every assigned label from preview canvas"
@@ -2059,7 +2078,7 @@ const SidebarContent = memo(function SidebarContent({
                 placeholder={t("searchPlaceholder")}
                 value={localSearchQuery}
                 onChange={(e) => setLocalSearchQuery(e.target.value)}
-                className="h-8 text-xs"
+                className="h-8 text-xs bg-background"
               />
               <div className="space-y-2">
                 <Button
@@ -2087,16 +2106,16 @@ const SidebarContent = memo(function SidebarContent({
           ) : null}
           <div className="space-y-2">
             {products.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-xs text-slate-600">
-                <p className="font-semibold text-slate-800">{t("productsEmptyTitle")}</p>
-                <p className="mt-1 text-slate-500">{t("productsEmptyHelp")}</p>
+              <div className="rounded-lg border border-dashed border-border bg-card p-4 text-xs text-muted-foreground">
+                <p className="font-semibold text-foreground">{t("productsEmptyTitle")}</p>
+                <p className="mt-1 text-muted-foreground">{t("productsEmptyHelp")}</p>
                 <Button variant="outline" size="sm" className="mt-3 w-full" onClick={addSampleProduct}>
                   {t("productsEmptyCta")}
                 </Button>
               </div>
             ) : filteredProducts.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-slate-200 bg-white p-4 text-xs text-slate-600 text-center">
-                <p className="text-slate-500">No matching products found.</p>
+              <div className="rounded-lg border border-dashed border-border bg-card p-4 text-xs text-muted-foreground text-center">
+                <p className="text-muted-foreground">No matching products found.</p>
               </div>
             ) : (
               filteredProducts.map((product) => (
@@ -2216,13 +2235,14 @@ const LayoutPanel = memo(function LayoutPanel({
     : null;
 
   return (
-    <div className="space-y-4 text-xs">
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label>{t("layoutPresets")}</Label>
+    <div className="space-y-3.5 text-xs">
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2 flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-xs font-semibold text-foreground">{t("layoutPresets")}</CardTitle>
           <Button
             variant="ghost"
             size="sm"
+            className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
             disabled={!activePreset}
             onClick={() => {
               if (activePreset) {
@@ -2235,274 +2255,301 @@ const LayoutPanel = memo(function LayoutPanel({
           >
             {t("resetPreset")}
           </Button>
-        </div>
-        <Select
-          value={selectedPresetId ?? ""}
-          onValueChange={(value) => {
-            const preset = PRESET_LAYOUTS.find((item) => item.id === value);
-            if (preset) {
-              setSelectedPresetId(preset.id);
-              const currentCustomLogo = layout.logoPreset === "custom" ? { logoPreset: "custom" as const, logoDataUrl: layout.logoDataUrl } : {};
-              setLayout({ ...layout, ...preset.values, ...currentCustomLogo });
-              if (preset.id === "roll-jewellery-100x15") {
-                setPagesToRender(1);
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <Select
+            value={selectedPresetId ?? ""}
+            onValueChange={(value) => {
+              const preset = PRESET_LAYOUTS.find((item) => item.id === value);
+              if (preset) {
+                setSelectedPresetId(preset.id);
+                const currentCustomLogo = layout.logoPreset === "custom" ? { logoPreset: "custom" as const, logoDataUrl: layout.logoDataUrl } : {};
+                setLayout({ ...layout, ...preset.values, ...currentCustomLogo });
+                if (preset.id === "roll-jewellery-100x15") {
+                  setPagesToRender(1);
+                }
               }
-            }
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t("layoutPresetPlaceholder")} />
-          </SelectTrigger>
-          <SelectContent>
-            {PRESET_LAYOUTS.map((preset) => (
-              <SelectItem key={preset.id} value={preset.id}>
-                <div className="flex w-full items-center justify-between gap-2">
-                  <span>{t(preset.labelKey)}</span>
-                  {preset.id === "a4-4x13" ? (
-                    <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                      {t("recommended")}
-                    </span>
-                  ) : null}
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+            }}
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder={t("layoutPresetPlaceholder")} />
+            </SelectTrigger>
+            <SelectContent>
+              {PRESET_LAYOUTS.map((preset) => (
+                <SelectItem key={preset.id} value={preset.id}>
+                  <div className="flex w-full items-center justify-between gap-2">
+                    <span>{t(preset.labelKey)}</span>
+                    {preset.id === "a4-4x13" ? (
+                      <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        {t("recommended")}
+                      </span>
+                    ) : null}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </CardContent>
+      </Card>
 
       {layout.labelTemplate === "jewellery-split" ? (
-        <>
-          <div className="space-y-2">
-            <Label htmlFor="brand-text">{t("brandText")}</Label>
+        <Card className="border-border shadow-xs">
+          <CardHeader className="p-3 pb-2">
+            <CardTitle className="text-xs font-semibold text-foreground">{t("brandText")}</CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 pt-0 space-y-3">
             <Input
               id="brand-text"
               value={layout.brandText ?? ""}
               placeholder="ZenZebra"
+              className="h-8 text-xs"
               onChange={(event) => setLayout({ ...layout, brandText: event.target.value })}
             />
-          </div>
-          <div className="rounded-lg border border-slate-200 p-3">
             <PrinterSelector />
-          </div>
-        </>
+          </CardContent>
+        </Card>
       ) : null}
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionPaper")}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="paper-width">{t("layoutPaperWidth")} (cm)</Label>
-            <Input
-              id="paper-width"
-              type="number"
-              step="0.1"
-              value={layout.paperWidthCm}
-              onChange={(event) => setLayout({ ...layout, paperWidthCm: Number(event.target.value) })}
-            />
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("layoutSectionPaper")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <Label htmlFor="paper-width" className="text-[11px] text-muted-foreground">{t("layoutPaperWidth")} (cm)</Label>
+              <Input
+                id="paper-width"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.paperWidthCm}
+                onChange={(event) => setLayout({ ...layout, paperWidthCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="paper-height" className="text-[11px] text-muted-foreground">{t("layoutPaperHeight")} (cm)</Label>
+              <Input
+                id="paper-height"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.paperHeightCm}
+                onChange={(event) => setLayout({ ...layout, paperHeightCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label htmlFor="margin" className="text-[11px] text-muted-foreground">{t("layoutMargin")} (cm)</Label>
+              <Input
+                id="margin"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.marginCm}
+                onChange={(event) => setLayout({ ...layout, marginCm: Number(event.target.value) })}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="paper-height">{t("layoutPaperHeight")} (cm)</Label>
-            <Input
-              id="paper-height"
-              type="number"
-              step="0.1"
-              value={layout.paperHeightCm}
-              onChange={(event) => setLayout({ ...layout, paperHeightCm: Number(event.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="margin">{t("layoutMargin")} (cm)</Label>
-            <Input
-              id="margin"
-              type="number"
-              step="0.1"
-              value={layout.marginCm}
-              onChange={(event) => setLayout({ ...layout, marginCm: Number(event.target.value) })}
-            />
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionLabel")}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="label-width">{t("layoutLabelWidth")} (cm)</Label>
-            <Input
-              id="label-width"
-              type="number"
-              step="0.1"
-              value={layout.labelWidthCm}
-              onChange={(event) => setLayout({ ...layout, labelWidthCm: Number(event.target.value) })}
-            />
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("layoutSectionLabel")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <Label htmlFor="label-width" className="text-[11px] text-muted-foreground">{t("layoutLabelWidth")} (cm)</Label>
+              <Input
+                id="label-width"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.labelWidthCm}
+                onChange={(event) => setLayout({ ...layout, labelWidthCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="label-height" className="text-[11px] text-muted-foreground">{t("layoutLabelHeight")} (cm)</Label>
+              <Input
+                id="label-height"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.labelHeightCm}
+                onChange={(event) => setLayout({ ...layout, labelHeightCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label htmlFor="cell-padding" className="text-[11px] text-muted-foreground">{t("layoutPadding")} (cm)</Label>
+              <Input
+                id="cell-padding"
+                type="number"
+                step="0.05"
+                className="h-8 text-xs"
+                value={layout.cellPaddingCm ?? 0}
+                onChange={(event) =>
+                  setLayout({ ...layout, cellPaddingCm: Number(event.target.value) })
+                }
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="label-height">{t("layoutLabelHeight")} (cm)</Label>
-            <Input
-              id="label-height"
-              type="number"
-              step="0.1"
-              value={layout.labelHeightCm}
-              onChange={(event) => setLayout({ ...layout, labelHeightCm: Number(event.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="cell-padding">{t("layoutPadding")} (cm)</Label>
-            <Input
-              id="cell-padding"
-              type="number"
-              step="0.05"
-              value={layout.cellPaddingCm ?? 0}
-              onChange={(event) =>
-                setLayout({ ...layout, cellPaddingCm: Number(event.target.value) })
-              }
-            />
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionGaps")}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="gap-x">{t("layoutGapX")} (cm)</Label>
-            <Input
-              id="gap-x"
-              type="number"
-              step="0.1"
-              value={layout.gapXCm ?? 0}
-              onChange={(event) => setLayout({ ...layout, gapXCm: Number(event.target.value) })}
-            />
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("layoutSectionGaps")} & {t("layoutSectionOffsets")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <Label htmlFor="gap-x" className="text-[11px] text-muted-foreground">{t("layoutGapX")} (cm)</Label>
+              <Input
+                id="gap-x"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.gapXCm ?? 0}
+                onChange={(event) => setLayout({ ...layout, gapXCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="gap-y" className="text-[11px] text-muted-foreground">{t("layoutGapY")} (cm)</Label>
+              <Input
+                id="gap-y"
+                type="number"
+                step="0.1"
+                className="h-8 text-xs"
+                value={layout.gapYCm ?? 0}
+                onChange={(event) => setLayout({ ...layout, gapYCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="offset-x" className="text-[11px] text-muted-foreground">{t("layoutOffsetX")} (cm)</Label>
+              <Input
+                id="offset-x"
+                type="number"
+                step="0.05"
+                className="h-8 text-xs"
+                value={layout.offsetXCm ?? 0}
+                onChange={(event) => setLayout({ ...layout, offsetXCm: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="offset-y" className="text-[11px] text-muted-foreground">{t("layoutOffsetY")} (cm)</Label>
+              <Input
+                id="offset-y"
+                type="number"
+                step="0.05"
+                className="h-8 text-xs"
+                value={layout.offsetYCm ?? 0}
+                onChange={(event) => setLayout({ ...layout, offsetYCm: Number(event.target.value) })}
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="gap-y">{t("layoutGapY")} (cm)</Label>
-            <Input
-              id="gap-y"
-              type="number"
-              step="0.1"
-              value={layout.gapYCm ?? 0}
-              onChange={(event) => setLayout({ ...layout, gapYCm: Number(event.target.value) })}
-            />
-          </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionOffsets")}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="offset-x">{t("layoutOffsetX")} (cm)</Label>
-            <Input
-              id="offset-x"
-              type="number"
-              step="0.05"
-              value={layout.offsetXCm ?? 0}
-              onChange={(event) => setLayout({ ...layout, offsetXCm: Number(event.target.value) })}
-            />
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("layoutSectionText")} & Barcode
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0 space-y-3">
+          <div className="grid grid-cols-2 gap-2.5">
+            <div className="space-y-1">
+              <Label htmlFor="barcode-height" className="text-[11px] text-muted-foreground">{t("layoutBarcodeHeight")} (mm)</Label>
+              <Input
+                id="barcode-height"
+                type="number"
+                step="1"
+                className="h-8 text-xs"
+                value={layout.barcodeHeightMm ?? 12}
+                onChange={(event) =>
+                  setLayout({ ...layout, barcodeHeightMm: Number(event.target.value) })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="font-size" className="text-[11px] text-muted-foreground">{t("layoutFontSize")} (pt)</Label>
+              <Input
+                id="font-size"
+                type="number"
+                step="0.5"
+                className="h-8 text-xs"
+                value={layout.fontSizePt ?? 7}
+                onChange={(event) => setLayout({ ...layout, fontSizePt: Number(event.target.value) })}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="barcode-width" className="text-[11px] text-muted-foreground">{t("layoutBarcodeWidth")} (mm)</Label>
+              <Input
+                id="barcode-width"
+                type="number"
+                step="0.5"
+                className="h-8 text-xs"
+                value={layout.barcodeWidthMm ?? 15}
+                onChange={(event) =>
+                  setLayout({ ...layout, barcodeWidthMm: Number(event.target.value) })
+                }
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[11px] text-muted-foreground">{t("layoutFontBoldness")}</Label>
+              <Select
+                value={layout.fontBoldness ?? "bold"}
+                onValueChange={(value) =>
+                  setLayout({ ...layout, fontBoldness: value as "normal" | "bold" | "extra-bold" })
+                }
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="normal">{t("boldnessNormal")}</SelectItem>
+                  <SelectItem value="bold">{t("boldnessBold")}</SelectItem>
+                  <SelectItem value="extra-bold">{t("boldnessExtraBold")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label className="text-[11px] text-muted-foreground">{t("layoutNameAlign")}</Label>
+              <Select
+                value={layout.nameAlign ?? "center"}
+                onValueChange={(value) =>
+                  setLayout({ ...layout, nameAlign: value as "left" | "center" | "right" })
+                }
+              >
+                <SelectTrigger className="h-8 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="left">{t("alignLeft")}</SelectItem>
+                  <SelectItem value="center">{t("alignCenter")}</SelectItem>
+                  <SelectItem value="right">{t("alignRight")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="offset-y">{t("layoutOffsetY")} (cm)</Label>
-            <Input
-              id="offset-y"
-              type="number"
-              step="0.05"
-              value={layout.offsetYCm ?? 0}
-              onChange={(event) => setLayout({ ...layout, offsetYCm: Number(event.target.value) })}
-            />
-          </div>
-        </div>
-      </div>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionText")}
-        </p>
-        <div className="grid grid-cols-2 gap-3">
+          <Separator className="my-2" />
+
           <div className="space-y-2">
-            <Label htmlFor="barcode-height">{t("layoutBarcodeHeight")} (mm)</Label>
-            <Input
-              id="barcode-height"
-              type="number"
-              step="1"
-              value={layout.barcodeHeightMm ?? 12}
-              onChange={(event) =>
-                setLayout({ ...layout, barcodeHeightMm: Number(event.target.value) })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="font-size">{t("layoutFontSize")} (pt)</Label>
-            <Input
-              id="font-size"
-              type="number"
-              step="0.5"
-              value={layout.fontSizePt ?? 7}
-              onChange={(event) => setLayout({ ...layout, fontSizePt: Number(event.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="barcode-width">{t("layoutBarcodeWidth")} (mm)</Label>
-            <Input
-              id="barcode-width"
-              type="number"
-              step="0.5"
-              value={layout.barcodeWidthMm ?? 15}
-              onChange={(event) =>
-                setLayout({ ...layout, barcodeWidthMm: Number(event.target.value) })
-              }
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>{t("layoutFontBoldness")}</Label>
-            <Select
-              value={layout.fontBoldness ?? "bold"}
-              onValueChange={(value) =>
-                setLayout({ ...layout, fontBoldness: value as "normal" | "bold" | "extra-bold" })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="normal">{t("boldnessNormal")}</SelectItem>
-                <SelectItem value="bold">{t("boldnessBold")}</SelectItem>
-                <SelectItem value="extra-bold">{t("boldnessExtraBold")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>{t("layoutNameAlign")}</Label>
-            <Select
-              value={layout.nameAlign ?? "center"}
-              onValueChange={(value) =>
-                setLayout({ ...layout, nameAlign: value as "left" | "center" | "right" })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="left">{t("alignLeft")}</SelectItem>
-                <SelectItem value="center">{t("alignCenter")}</SelectItem>
-                <SelectItem value="right">{t("alignRight")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-3 col-span-2 border-t pt-3 mt-2">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
               {t("layoutLogo")}
             </p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-2">
-                <Label>{t("layoutLogoSelect")}</Label>
+            <div className="grid grid-cols-2 gap-2.5">
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">{t("layoutLogoSelect")}</Label>
                 <Select
                   value={
                     layout.logoPreset ??
@@ -2521,16 +2568,10 @@ const LayoutPanel = memo(function LayoutPanel({
                         logoPreset: "zebra",
                         logoDataUrl: "/brand/zebra-logo.png",
                       });
-                    } else if (value === "labbely") {
-                      setLayout({
-                        ...layout,
-                        logoPreset: "labbely",
-                        logoDataUrl: "/brand/labbely-icon.png",
-                      });
                     } else if (value === "none") {
                       setLayout({ ...layout, logoPreset: "none", logoDataUrl: undefined });
                     } else {
-                      const isPresetLogo = ["/brand/zebra-logo.png", "/brand/labbely-icon.png"].includes(layout.logoDataUrl ?? "");
+                      const isPresetLogo = layout.logoDataUrl === "/brand/zebra-logo.png";
                       setLayout({
                         ...layout,
                         logoPreset: "custom",
@@ -2539,27 +2580,26 @@ const LayoutPanel = memo(function LayoutPanel({
                     }
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="zebra">{t("logoZebra")}</SelectItem>
-                    <SelectItem value="labbely">{t("logoLabbely")}</SelectItem>
                     <SelectItem value="custom">{t("logoCustom")}</SelectItem>
                     <SelectItem value="none">{t("logoNone")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>{t("layoutLogoPosition")}</Label>
+              <div className="space-y-1">
+                <Label className="text-[11px] text-muted-foreground">{t("layoutLogoPosition")}</Label>
                 <Select
                   value={layout.logoPosition ?? "inline"}
                   onValueChange={(value) =>
                     setLayout({ ...layout, logoPosition: value as "inline" | "top" })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -2573,15 +2613,15 @@ const LayoutPanel = memo(function LayoutPanel({
             {(layout.logoPreset === "custom" ||
               (!layout.logoPreset &&
                 layout.logoDataUrl &&
-                !["/brand/zebra-logo.png", "/brand/labbely-icon.png"].includes(layout.logoDataUrl))) && (
-              <div className="space-y-2">
-                <Label htmlFor="logo-upload">{t("logoCustom")}</Label>
+                layout.logoDataUrl !== "/brand/zebra-logo.png")) && (
+              <div className="space-y-1 pt-1">
+                <Label htmlFor="logo-upload" className="text-[11px] text-muted-foreground">{t("logoCustom")}</Label>
                 <div className="flex items-center gap-2">
                   <Input
                     id="logo-upload"
                     type="file"
                     accept="image/*"
-                    className="h-9 py-1 text-xs"
+                    className="h-8 py-1 text-xs"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (file) {
@@ -2598,6 +2638,7 @@ const LayoutPanel = memo(function LayoutPanel({
                     <Button
                       variant="outline"
                       size="sm"
+                      className="h-8 px-2 text-xs"
                       onClick={() => setLayout({ ...layout, logoPreset: "none", logoDataUrl: undefined })}
                     >
                       {t("clear")}
@@ -2608,9 +2649,9 @@ const LayoutPanel = memo(function LayoutPanel({
             )}
 
             {layout.logoDataUrl && (
-              <div className="space-y-2 rounded-lg border border-slate-100 bg-slate-50/50 p-2.5">
+              <div className="space-y-2 rounded-md border border-border bg-muted/40 p-2.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="logo-size">{t("layoutLogoSize")}</Label>
+                  <Label htmlFor="logo-size" className="text-[11px] text-muted-foreground">{t("layoutLogoSize")}</Label>
                   <div className="flex gap-1">
                     {[16, 20, 24, 32].map((size) => (
                       <Button
@@ -2636,14 +2677,14 @@ const LayoutPanel = memo(function LayoutPanel({
                     onChange={(event) =>
                       setLayout({ ...layout, logoSize: Number(event.target.value) })
                     }
-                    className="h-8 py-1 text-xs w-20 bg-white"
+                    className="h-8 py-1 text-xs w-20 bg-background"
                   />
-                  <div className="flex items-center gap-2 border rounded bg-white px-2 py-1">
-                    <span className="text-[10px] text-slate-400">Preview:</span>
+                  <div className="flex items-center gap-2 border border-border rounded bg-background px-2 py-1">
+                    <span className="text-[10px] text-muted-foreground">Preview:</span>
                     <img
                       src={layout.logoDataUrl}
                       alt="logo preview"
-                      className="object-contain"
+                      className="object-contain dark:invert"
                       style={{ height: `${layout.logoSize ?? 20}px` }}
                     />
                   </div>
@@ -2651,21 +2692,26 @@ const LayoutPanel = memo(function LayoutPanel({
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">
-          {t("layoutSectionPages")}
-        </p>
-        <Input
-          id="pages"
-          type="number"
-          min={1}
-          value={pagesToRender}
-          onChange={(event) => setPagesToRender(Number(event.target.value))}
-        />
-      </div>
+      <Card className="border-border shadow-xs">
+        <CardHeader className="p-3 pb-2">
+          <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+            {t("layoutSectionPages")}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          <Input
+            id="pages"
+            type="number"
+            min={1}
+            className="h-8 text-xs"
+            value={pagesToRender}
+            onChange={(event) => setPagesToRender(Number(event.target.value))}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 });
@@ -2852,8 +2898,8 @@ const LabelCell = memo(function LabelCell({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
-          className={`group relative flex h-full flex-col items-center justify-center border p-1 text-center select-none transition-colors hover:border-primary/30 ${
-        isSelected ? "border-primary/50 bg-primary/10" : "border-slate-200"
+          className={`group relative flex h-full flex-col items-center justify-center border p-1 text-center select-none transition-colors hover:border-primary/40 ${
+        isSelected ? "border-primary/60 bg-primary/10 ring-1 ring-primary/30" : "border-slate-300"
       }`}
           onMouseDown={onMouseDown}
           onMouseEnter={onMouseEnter}

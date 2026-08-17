@@ -4,6 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -20,16 +21,20 @@ export default function PrinterSelector() {
   const { connected, connecting, connect, printers, refreshPrinters, error } = useQZ();
   const [selected, setSelected] = useState(() => getSavedPrinter() ?? "");
 
-
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <Label>{t("qzPrinter")}</Label>
-        <span
-          className={`text-[10px] font-medium ${connected ? "text-emerald-600" : "text-slate-400"}`}
+        <Label className="text-xs text-muted-foreground font-medium">{t("qzPrinter")}</Label>
+        <Badge
+          variant={connected ? "default" : "outline"}
+          className={`h-5 px-1.5 text-[10px] ${
+            connected
+              ? "bg-emerald-600 hover:bg-emerald-600 text-white"
+              : "border-border text-muted-foreground font-normal"
+          }`}
         >
           {connected ? t("qzConnected") : t("qzDisconnected")}
-        </span>
+        </Badge>
       </div>
       {connected ? (
         <div className="flex items-center gap-2">
