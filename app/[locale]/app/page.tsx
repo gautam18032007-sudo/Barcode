@@ -2771,7 +2771,7 @@ function JewellerySplitContent({
           } ${nameAlignClass(nameAlign)}`}
           style={{ fontSize: `${fontSizePt}pt`, lineHeight: 1.2 }}
         >
-          {product.sku ? `${product.sku} ${product.name}` : product.name}
+          {product.name}
         </p>
       </div>
       <div className="flex min-w-0 flex-1 flex-col items-start justify-center overflow-hidden pl-1 text-left">

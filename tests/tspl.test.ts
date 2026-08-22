@@ -19,12 +19,49 @@ describe("generateTSPL", () => {
     expect(tspl).toMatch(/PRINT 1\r\n$/);
   });
 
-  it("includes the barcode, sku+name, brand and rupee price", () => {
+  it("includes the barcode, product name ONLY (no SKU prefix), brand and rupee price", () => {
     const tspl = generateTSPL(label);
     expect(tspl).toContain('"101860"');
-    expect(tspl).toContain("ZZ001 Thor Keychain");
+    expect(tspl).toContain('"Thor Keychain"');
+    expect(tspl).not.toContain("ZZ001 Thor Keychain");
     expect(tspl).toContain("ZenZebra");
     expect(tspl).toContain("SP = Rs.1200");
+  });
+
+  it("renders ONLY visible Product Name for various products while preserving encoded barcode", () => {
+    const testCases = [
+      { sku: "ABC123", name: "Silver Ring", barcode: "890000001" },
+      { sku: "A001", name: "Gold Ring", barcode: "890000002" },
+      { sku: "A002", name: "Diamond Necklace", barcode: "890000003" },
+      { sku: "A003", name: "Silver Bracelet", barcode: "890000004" },
+    ];
+
+    for (const tc of testCases) {
+      const tspl = generateTSPL(tc);
+      // Visible product name text line must contain exact Product Name
+      expect(tspl).toContain(`"${tc.name}"`);
+      // TSPL BARCODE command must encode exact barcode value
+      expect(tspl).toContain(`"${tc.barcode}"`);
+      // Must NOT contain concatenated SKU + Name or SKU only as name line
+      expect(tspl).not.toContain(`${tc.sku} ${tc.name}`);
+      expect(tspl).not.toContain(`"${tc.sku}"`);
+    }
+  });
+
+  it("proves visible label text changes dynamically when product name changes without altering barcode encoding", () => {
+    const prod1 = { sku: "A001", name: "Gold Ring", barcode: "111111111111" };
+    const prod2 = { sku: "A001", name: "Platinum Ring", barcode: "111111111111" };
+
+    const tspl1 = generateTSPL(prod1);
+    const tspl2 = generateTSPL(prod2);
+
+    // Visible text reflects dynamic Product Name
+    expect(tspl1).toContain('"Gold Ring"');
+    expect(tspl2).toContain('"Platinum Ring"');
+
+    // Both encode exact same unchanged barcode
+    expect(tspl1).toContain('"111111111111"');
+    expect(tspl2).toContain('"111111111111"');
   });
 
   it("keeps all X coordinates inside the 55mm printable body (<=440 dots)", () => {

@@ -68,7 +68,7 @@ export function generateTSPL(label: TsplLabel, options: TsplOptions = {}): strin
 
   const margin = 2 * dots; // 2mm inset from the label edge
   const barcode = sanitize(label.barcode);
-  const nameLine = sanitize(label.sku ? `${label.sku} ${label.name}` : label.name);
+  const nameLine = sanitize(label.name);
   const brand = sanitize(label.brand ?? "ZenZebra");
   const priceLine = label.price != null ? `SP = Rs.${formatPrice(label.price)}` : "";
 
