@@ -45,4 +45,48 @@ describe("computeBarcodeLayout", () => {
     expect(layout.rating).toBe("WARNING");
     expect(layout.diagnosticMessage).toBeDefined();
   });
+
+  describe("barcode width responds to the real available label width", () => {
+    it("gives a short barcode more module width on a larger label than a smaller one", () => {
+      const small = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 60 });
+      const large = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 600 });
+      expect(large.moduleWidthPx).toBeGreaterThanOrEqual(small.moduleWidthPx);
+    });
+
+    it("gives a long barcode more module width on a larger label than a smaller one", () => {
+      const value = "SKU-2026-0000000123456789";
+      const small = computeBarcodeLayout({ value, printableWidthPx: 100 });
+      const large = computeBarcodeLayout({ value, printableWidthPx: 800 });
+      expect(large.moduleWidthPx).toBeGreaterThanOrEqual(small.moduleWidthPx);
+    });
+
+    it("never drops module width below the 1.0px scanner-safe floor, however tight the label", () => {
+      const layout = computeBarcodeLayout({ value: "ZZ0000000000000001", printableWidthPx: 1 });
+      expect(layout.moduleWidthPx).toBeGreaterThanOrEqual(1.0);
+    });
+
+    it("never exceeds the existing 2.0px module-width ceiling, however large the label", () => {
+      const layout = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 100000 });
+      expect(layout.moduleWidthPx).toBeLessThanOrEqual(2.0);
+    });
+
+    it("keeps quiet zone proportional to module width regardless of label size", () => {
+      const small = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 60 });
+      const large = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 600 });
+      expect(small.quietZonePx).toBeGreaterThanOrEqual(10);
+      expect(large.quietZonePx).toBeGreaterThanOrEqual(small.quietZonePx);
+    });
+
+    it("does not change barcode value or symbology when available width changes", () => {
+      const small = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 60 });
+      const large = computeBarcodeLayout({ value: "ZZ0000001", printableWidthPx: 600 });
+      expect(small.cleanValue).toBe(large.cleanValue);
+      expect(small.symbology).toBe(large.symbology);
+    });
+
+    it("falls back to the historical intrinsic module width when no width is supplied at all", () => {
+      const layout = computeBarcodeLayout({ value: "ZZ0000001" });
+      expect(layout.moduleWidthPx).toBe(2.0);
+    });
+  });
 });

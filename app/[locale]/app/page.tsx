@@ -324,6 +324,15 @@ export default function AppPage() {
     const nameLinePx = (layout.fontSizePt ?? 7) * 1.33 + 4;
     return Math.max(labelHeightPx - paddingPx - nameLinePx, 10);
   }, [layout.labelHeightCm, layout.cellPaddingCm, layout.fontSizePt]);
+  // jewellery-split renders the barcode in the left half of a two-column
+  // flex layout (see JewellerySplitContent), so only half the label's
+  // usable width is actually available to the barcode there.
+  const barcodeMaxWidthPx = useMemo(() => {
+    const labelWidthPx = layout.labelWidthCm * 37.8;
+    const paddingPx = (layout.cellPaddingCm ?? 0) * 2 * 37.8;
+    const usableWidthPx = Math.max(labelWidthPx - paddingPx, 10);
+    return layout.labelTemplate === "jewellery-split" ? usableWidthPx / 2 : usableWidthPx;
+  }, [layout.labelWidthCm, layout.cellPaddingCm, layout.labelTemplate]);
   const cellPaddingCm = layout.cellPaddingCm ?? 0;
   const offsetX = layout.offsetXCm ?? 0;
   const offsetY = layout.offsetYCm ?? 0;
@@ -781,8 +790,8 @@ export default function AppPage() {
     const toastId = toast.loading(t("qzPrinting"));
     try {
       const tspl = generateTsplBatch(labels, {
-        widthMm: layout.paperWidthCm * 10,
-        heightMm: layout.paperHeightCm * 10,
+        widthMm: layout.labelWidthCm * 10,
+        heightMm: layout.labelHeightCm * 10,
       });
       await printRaw(printer, tspl);
       toast.success(t("qzPrintDone", { count: labels.length }), { id: toastId });
@@ -793,7 +802,7 @@ export default function AppPage() {
     } finally {
       setQzPrinting(false);
     }
-  }, [layout.brandText, layout.paperWidthCm, layout.paperHeightCm, pages, productById, t]);
+  }, [layout.brandText, layout.labelWidthCm, layout.labelHeightCm, pages, productById, t]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1463,6 +1472,7 @@ export default function AppPage() {
                           }
                           barcodeHeightPx={barcodeHeightPx}
                           barcodeMaxHeightPx={barcodeMaxHeightPx}
+                          barcodeMaxWidthPx={barcodeMaxWidthPx}
                           fontSizePt={layout.fontSizePt ?? 7}
                           paddingCm={cellPaddingCm}
                           labelTemplate={layout.labelTemplate}
@@ -1548,6 +1558,7 @@ export default function AppPage() {
         productById={productById}
         barcodeHeightPx={barcodeHeightPx}
         barcodeMaxHeightPx={barcodeMaxHeightPx}
+        barcodeMaxWidthPx={barcodeMaxWidthPx}
         paddingCm={cellPaddingCm}
       />
       <div className="no-print mx-auto max-w-[1600px] px-6 pb-10">
@@ -2247,7 +2258,7 @@ const LayoutPanel = memo(function LayoutPanel({
             onClick={() => {
               if (activePreset) {
                 setLayout({ ...layout, ...activePreset.values });
-                if (activePreset.id === "roll-jewellery-100x15") {
+                if (activePreset.id === "roll-jewellery-100x19") {
                   setPagesToRender(1);
                 }
               }
@@ -2265,7 +2276,7 @@ const LayoutPanel = memo(function LayoutPanel({
                 setSelectedPresetId(preset.id);
                 const currentCustomLogo = layout.logoPreset === "custom" ? { logoPreset: "custom" as const, logoDataUrl: layout.logoDataUrl } : {};
                 setLayout({ ...layout, ...preset.values, ...currentCustomLogo });
-                if (preset.id === "roll-jewellery-100x15") {
+                if (preset.id === "roll-jewellery-100x19") {
                   setPagesToRender(1);
                 }
               }
@@ -2728,6 +2739,7 @@ function JewellerySplitContent({
   product,
   barcodeHeightPx,
   barcodeMaxHeightPx,
+  barcodeMaxWidthPx,
   fontSizePt,
   brandText,
   nameAlign,
@@ -2740,6 +2752,7 @@ function JewellerySplitContent({
   product: Product;
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
+  barcodeMaxWidthPx?: number;
   fontSizePt: number;
   brandText: string;
   nameAlign?: NameAlign;
@@ -2758,6 +2771,7 @@ function JewellerySplitContent({
           value={product.barcode}
           height={barcodeHeightPx}
           maxHeightPx={barcodeMaxHeightPx}
+          printableWidthPx={barcodeMaxWidthPx}
           moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
           fontBoldness={fontBoldness}
         />
@@ -2855,6 +2869,7 @@ const LabelCell = memo(function LabelCell({
   onDuplicate,
   barcodeHeightPx,
   barcodeMaxHeightPx,
+  barcodeMaxWidthPx,
   fontSizePt,
   paddingCm,
   labelTemplate,
@@ -2881,6 +2896,7 @@ const LabelCell = memo(function LabelCell({
   onDuplicate: () => void;
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
+  barcodeMaxWidthPx?: number;
   fontSizePt: number;
   paddingCm: number;
   labelTemplate?: "default" | "jewellery-split";
@@ -2920,6 +2936,7 @@ const LabelCell = memo(function LabelCell({
                   product={product}
                   barcodeHeightPx={barcodeHeightPx}
                   barcodeMaxHeightPx={barcodeMaxHeightPx}
+                  barcodeMaxWidthPx={barcodeMaxWidthPx}
                   fontSizePt={fontSizePt}
                   brandText={brandText ?? "ZenZebra"}
                   nameAlign={nameAlign}
@@ -2980,6 +2997,7 @@ const LabelCell = memo(function LabelCell({
                     value={product.barcode}
                     height={barcodeHeightPx}
                     maxHeightPx={barcodeMaxHeightPx}
+                    printableWidthPx={barcodeMaxWidthPx}
                     moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
                     fontBoldness={fontBoldness}
                   />
@@ -3030,6 +3048,7 @@ const PrintArea = memo(function PrintArea({
   productById,
   barcodeHeightPx,
   barcodeMaxHeightPx,
+  barcodeMaxWidthPx,
   paddingCm,
 }: {
   layout: LayoutSettings;
@@ -3038,6 +3057,7 @@ const PrintArea = memo(function PrintArea({
   productById: Map<string, Product>;
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
+  barcodeMaxWidthPx?: number;
   paddingCm: number;
 }) {
   return (
@@ -3077,6 +3097,7 @@ const PrintArea = memo(function PrintArea({
                         product={product}
                         barcodeHeightPx={barcodeHeightPx}
                         barcodeMaxHeightPx={barcodeMaxHeightPx}
+                        barcodeMaxWidthPx={barcodeMaxWidthPx}
                         fontSizePt={layout.fontSizePt ?? 7}
                         brandText={layout.brandText ?? "ZenZebra"}
                         nameAlign={layout.nameAlign}
@@ -3137,6 +3158,7 @@ const PrintArea = memo(function PrintArea({
                           value={product.barcode}
                           height={barcodeHeightPx}
                           maxHeightPx={barcodeMaxHeightPx}
+                          printableWidthPx={barcodeMaxWidthPx}
                           moduleWidthOverride={layout.barcodeWidthMm ? layout.barcodeWidthMm * 0.1 : undefined}
                           fontBoldness={layout.fontBoldness}
                         />

@@ -75,6 +75,11 @@ export const computeBarcodeLayout = (options: BarcodeLayoutOptions): BarcodeLayo
   const symbology = detectBarcodeFormat(cleanValue);
   const len = cleanValue.length;
 
+  // Only clamp to the real available width when a caller actually supplies
+  // one. With neither, there is no label to size against, so short codes
+  // keep their historical ideal-width intrinsic size (matches existing
+  // diagnostic tests that inspect unscaled/intrinsic metrics).
+  const hasExplicitWidth = options.printableWidthPx != null || options.printableWidthMm != null;
   const targetWidthPx = options.printableWidthPx ?? (options.printableWidthMm ? options.printableWidthMm * 3.78 : 300);
   const baseHeightPx = options.requestedHeightPx ?? 40;
 
@@ -82,9 +87,16 @@ export const computeBarcodeLayout = (options: BarcodeLayoutOptions): BarcodeLayo
   const estimatedModules = symbology === "CODE128" ? len * 11 + 35 : len * 10 + 20;
   // Dynamic scaling against target printable container width (with 20-module quiet zone buffer)
   const rawModuleWidth = targetWidthPx / (estimatedModules + 20);
-  // Constrain module width between 1.0px (scanner-safe floor) and 2.0px
+  // Ideal module width for short codes when space allows; constrained
+  // between 1.0px (scanner-safe floor) and 2.0px (print-quality ceiling).
+  // When a real printableWidthPx/Mm is given, short codes still shrink to
+  // fit it instead of ignoring it outright, so the barcode responds to the
+  // actual label size.
+  const idealModuleWidthPx = symbology === "CODE128" ? 2.0 : 1.5;
   const moduleWidthPx = len <= 12
-    ? (symbology === "CODE128" ? 2.0 : 1.5)
+    ? (hasExplicitWidth
+        ? Math.max(1.0, Math.min(idealModuleWidthPx, Math.round(rawModuleWidth * 100) / 100))
+        : idealModuleWidthPx)
     : Math.max(1.0, Math.min(2.0, Math.round(rawModuleWidth * 100) / 100));
 
   // Proportional quiet zone (minimum 10px / 10 modules)
