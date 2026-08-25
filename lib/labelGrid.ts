@@ -8,6 +8,9 @@ export type LayoutSettings = {
   gapYCm?: number;
   barcodeHeightMm?: number;
   barcodeWidthMm?: number;
+  /** Position of the barcode within its cell, relative to centered (0,0). */
+  barcodeOffsetXCm?: number;
+  barcodeOffsetYCm?: number;
   fontSizePt?: number;
   cellPaddingCm?: number;
   offsetXCm?: number;

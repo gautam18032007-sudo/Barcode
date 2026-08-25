@@ -1,29 +1,55 @@
-// Unified Barcode Layout Engine & Scanner Diagnostic System
-// Single source of truth shared between SVG web preview (BarcodeSvg.tsx)
-// and TSPL thermal printer drivers (tspl.ts).
+// Unified Physical Barcode Geometry Engine & Scanner Diagnostic System
+// Single source of truth shared between SVG web preview (BarcodeSvg.tsx),
+// browser print (@media print), and TSPL thermal printer drivers (tspl.ts).
 
 export type BarcodeQualityRating = "EXCELLENT" | "GOOD" | "WARNING" | "UNSAFE";
+export type BarcodeRiskLevel = "LOW_RISK" | "GOOD" | "REVIEW_SETTINGS" | "UNSAFE";
 
 export type BarcodeLayoutOptions = {
   value: string;
-  printableWidthPx?: number;
   printableWidthMm?: number;
-  dpi?: number;
+  printableWidthPx?: number;
+  requestedHeightMm?: number;
   requestedHeightPx?: number;
+  requestedXDimensionMm?: number;
+  dpi?: number;
 };
 
 export type BarcodeLayoutResult = {
   cleanValue: string;
   symbology: string;
   isValid: boolean;
+  
+  // Physical dimensions (Source of Truth - mm)
+  moduleWidthMm: number;
+  quietZoneMm: number;
+  barcodeWidthMm: number;
+  barcodeHeightMm: number;
+  symbolModules: number;
+  fitsInLabel: boolean;
+
+  // Printer-specific Dots (203 DPI / 300 DPI)
+  moduleWidthDots203: number;
+  moduleWidthDots300: number;
+  quietZoneDots203: number;
+  quietZoneDots300: number;
+  tsplNarrowDots: number;
+  tsplWideDots: number;
+
+  // Preview CSS Pixels (1mm = 3.7795px)
   moduleWidthPx: number;
   quietZonePx: number;
   renderHeightPx: number;
-  tsplNarrowDots: number;
-  tsplWideDots: number;
+  previewWidthPx: number;
+  previewHeightPx: number;
+
+  // Print Risk Assessment System
   qualityScore: number; // 0 - 100
   rating: BarcodeQualityRating;
+  riskLevel: BarcodeRiskLevel;
+  riskTitle: string;
   diagnosticMessage?: string;
+  warnings: string[];
 };
 
 /**
@@ -67,7 +93,23 @@ export const calculateDynamicModuleWidth = (value: string): number => {
 };
 
 /**
- * Calculate unified layout metrics, TSPL dot dimensions, and scanner Quality Score.
+ * Calculate total symbol modules for a barcode string and symbology.
+ * Code 128: 11 modules per char + 35 start/stop/checksum modules.
+ */
+export const calculateSymbolModules = (value: string, symbology: string): number => {
+  const len = value.length;
+  if (symbology === "EAN13" || symbology === "UPC") {
+    return 95;
+  }
+  if (symbology === "EAN8") {
+    return 67;
+  }
+  // CODE128 default
+  return Math.max(35, len * 11 + 35);
+};
+
+/**
+ * Calculate unified physical layout metrics, 3-tier unit conversions, and honest Print Risk Assessment.
  */
 export const computeBarcodeLayout = (options: BarcodeLayoutOptions): BarcodeLayoutResult => {
   const cleanValue = validateBarcodeValue(options.value);
@@ -75,88 +117,138 @@ export const computeBarcodeLayout = (options: BarcodeLayoutOptions): BarcodeLayo
   const symbology = detectBarcodeFormat(cleanValue);
   const len = cleanValue.length;
 
-  // Only clamp to the real available width when a caller actually supplies
-  // one. With neither, there is no label to size against, so short codes
-  // keep their historical ideal-width intrinsic size (matches existing
-  // diagnostic tests that inspect unscaled/intrinsic metrics).
-  const hasExplicitWidth = options.printableWidthPx != null || options.printableWidthMm != null;
-  const targetWidthPx = options.printableWidthPx ?? (options.printableWidthMm ? options.printableWidthMm * 3.78 : 300);
-  const baseHeightPx = options.requestedHeightPx ?? 40;
+  const symbolModules = calculateSymbolModules(cleanValue, symbology);
+  const quietZoneModules = 10; // Standard 10 modules on each side (total 20)
+  const totalModules = symbolModules + quietZoneModules * 2;
 
-  // Code128 symbol modules: 11 per char + 35 start/stop/checksum
-  const estimatedModules = symbology === "CODE128" ? len * 11 + 35 : len * 10 + 20;
-  // Dynamic scaling against target printable container width (with 20-module quiet zone buffer)
-  const rawModuleWidth = targetWidthPx / (estimatedModules + 20);
-  // Ideal module width for short codes when space allows; constrained
-  // between 1.0px (scanner-safe floor) and 2.0px (print-quality ceiling).
-  // When a real printableWidthPx/Mm is given, short codes still shrink to
-  // fit it instead of ignoring it outright, so the barcode responds to the
-  // actual label size.
-  const idealModuleWidthPx = symbology === "CODE128" ? 2.0 : 1.5;
-  const moduleWidthPx = len <= 12
-    ? (hasExplicitWidth
-        ? Math.max(1.0, Math.min(idealModuleWidthPx, Math.round(rawModuleWidth * 100) / 100))
-        : idealModuleWidthPx)
-    : Math.max(1.0, Math.min(2.0, Math.round(rawModuleWidth * 100) / 100));
+  const hasExplicitWidth = options.printableWidthMm != null || options.printableWidthPx != null;
+  const printableWidthMm = options.printableWidthMm ?? (options.printableWidthPx ? options.printableWidthPx / 3.7795 : undefined);
+  const targetWidthPx = options.printableWidthPx ?? (options.printableWidthMm ? options.printableWidthMm * 3.7795 : 300);
+  const baseHeightPx = options.requestedHeightPx ?? (options.requestedHeightMm ? options.requestedHeightMm * 3.7795 : 40);
 
-  // Proportional quiet zone (minimum 10px / 10 modules)
-  const quietZonePx = Math.max(10, Math.round(moduleWidthPx * 10));
-  // Height scaling for dense barcodes (> 20 chars) to preserve aspect ratio
-  const renderHeightPx = len > 20 ? Math.round(baseHeightPx * 1.15) : baseHeightPx;
-
-  // TSPL thermal dot calculation (203 DPI = 8 dots/mm)
-  const tsplAvailableDots = (options.printableWidthMm ?? 27.5) * 8 - 16;
-  const tsplRequiredDots = estimatedModules * 2;
-  const useThinDots = tsplRequiredDots > tsplAvailableDots;
-  const tsplNarrowDots = useThinDots ? 1 : 2;
-  const tsplWideDots = useThinDots ? 2 : 4;
-
-  // Calculate Scanner Quality Score (0 - 100)
-  let qualityScore = 100;
-  if (moduleWidthPx < 1.2) {
-    qualityScore -= 15;
-  }
-  if (moduleWidthPx <= 1.0) {
-    qualityScore -= 15;
-  }
-  if (len > 30) {
-    qualityScore -= 15;
-  }
-  if (len > 45) {
-    qualityScore -= 20;
-  }
-  if (!isValid) {
-    qualityScore = 0;
-  }
-
-  qualityScore = Math.max(0, Math.min(100, qualityScore));
-
-  let rating: BarcodeQualityRating = "EXCELLENT";
-  let diagnosticMessage: string | undefined;
-
-  if (qualityScore >= 90) {
-    rating = "EXCELLENT";
-  } else if (qualityScore >= 75) {
-    rating = "GOOD";
-  } else if (qualityScore >= 55) {
-    rating = "WARNING";
-    diagnosticMessage = `High character density (${len} chars). Scanner resolution may be reduced.`;
+  // Calculate module width in CSS px first (for backward-compatible tests) and convert to mm
+  let moduleWidthPx: number;
+  if (options.requestedXDimensionMm && options.requestedXDimensionMm > 0) {
+    moduleWidthPx = Math.round(options.requestedXDimensionMm * 3.7795 * 100) / 100;
+  } else if (hasExplicitWidth) {
+    const rawPx = targetWidthPx / totalModules;
+    const maxModulePx = symbology === "CODE128" ? 2.0 : 1.5;
+    moduleWidthPx = len <= 12
+      ? Math.max(1.0, Math.min(maxModulePx, Math.round(rawPx * 100) / 100))
+      : Math.max(1.0, Math.min(2.0, Math.round(rawPx * 100) / 100));
   } else {
-    rating = "UNSAFE";
-    diagnosticMessage = `Barcode length (${len} chars) exceeds optimal printable width. Recommended max: 35 chars.`;
+    moduleWidthPx = symbology === "CODE128" ? 2.0 : 1.5;
   }
+
+  const moduleWidthMm = Math.round((moduleWidthPx / 3.7795) * 100) / 100;
+  const quietZonePx = Math.max(10, Math.round(moduleWidthPx * quietZoneModules));
+  const quietZoneMm = Math.round((quietZonePx / 3.7795) * 100) / 100;
+
+  const renderHeightPx = len > 20 ? Math.round(baseHeightPx * 1.15) : Math.round(baseHeightPx);
+  const barcodeHeightMm = Math.round((renderHeightPx / 3.7795) * 100) / 100;
+
+  // Total physical barcode dimensions (mm)
+  const barcodeWidthMm = Math.round((symbolModules * moduleWidthMm + quietZoneMm * 2) * 100) / 100;
+  const fitsInLabel = printableWidthMm == null || barcodeWidthMm <= printableWidthMm + 0.5;
+
+  // Dot calculations for Thermal Printers (203 DPI = 8 dots/mm, 300 DPI = 11.81 dots/mm)
+  const moduleWidthDots203 = Math.round(moduleWidthMm * 8 * 100) / 100;
+  const moduleWidthDots300 = Math.round(moduleWidthMm * 11.81 * 100) / 100;
+  const quietZoneDots203 = Math.round(quietZoneMm * 8);
+  const quietZoneDots300 = Math.round(quietZoneMm * 11.81);
+
+  // TSPL Command Dot Widths (Narrow / Wide dots)
+  const tsplAvailableDots = (printableWidthMm ?? 27.5) * 8 - 16;
+  const tsplRequiredDots = symbolModules * 2;
+  const useThinDots = tsplRequiredDots > tsplAvailableDots;
+  const tsplNarrowDots = useThinDots ? 1 : Math.max(1, Math.round(moduleWidthDots203));
+  const tsplWideDots = tsplNarrowDots * 2;
+
+  // Preview CSS Pixels (1mm = 3.7795px at 96 DPI CSS)
+  const previewWidthPx = Math.round(barcodeWidthMm * 3.7795);
+  const previewHeightPx = renderHeightPx;
+
+  // Print Risk Assessment System & Warnings
+  const warnings: string[] = [];
+
+  if (!isValid) {
+    warnings.push("Barcode string is empty or invalid.");
+  }
+  if (!fitsInLabel && printableWidthMm) {
+    warnings.push(
+      `Barcode width (${barcodeWidthMm.toFixed(1)}mm) exceeds available printable width (${printableWidthMm.toFixed(1)}mm). Reduce X-dimension or increase label width.`
+    );
+  }
+  if (moduleWidthMm < 0.18) {
+    warnings.push(
+      `X-dimension (${moduleWidthMm.toFixed(2)}mm / ${moduleWidthDots203.toFixed(2)} dots @ 203 DPI) is below scanner-safe floor (0.18mm).`
+    );
+  } else if (moduleWidthMm < 0.25) {
+    warnings.push(
+      `X-dimension (${moduleWidthMm.toFixed(2)}mm / ${moduleWidthDots203.toFixed(2)} dots @ 203 DPI) is tight. Recommend 300+ DPI printer or larger label.`
+    );
+  }
+  if (len > 35) {
+    warnings.push(`High character density (${len} chars). Scanner resolution requirements are increased.`);
+  }
+
+  // Risk Rating Calculation
+  let riskLevel: BarcodeRiskLevel = "LOW_RISK";
+  let rating: BarcodeQualityRating = "EXCELLENT";
+  let qualityScore = 100;
+
+  if (!isValid || !fitsInLabel || moduleWidthMm < 0.18) {
+    riskLevel = "UNSAFE";
+    rating = "UNSAFE";
+    qualityScore = moduleWidthMm < 0.18 ? 40 : 0;
+  } else if (moduleWidthMm < 0.25 || len > 35) {
+    riskLevel = "REVIEW_SETTINGS";
+    rating = "WARNING";
+    qualityScore = 65;
+  } else if (moduleWidthMm < 0.33) {
+    riskLevel = "GOOD";
+    rating = "GOOD";
+    qualityScore = 85;
+  } else {
+    riskLevel = "LOW_RISK";
+    rating = "EXCELLENT";
+    qualityScore = 100;
+  }
+
+  const riskTitleMap: Record<BarcodeRiskLevel, string> = {
+    LOW_RISK: "✓ LOW PRINT RISK",
+    GOOD: "✓ GOOD PRINT GEOMETRY",
+    REVIEW_SETTINGS: "⚠ REVIEW PRINT SETTINGS",
+    UNSAFE: "✕ UNSAFE GEOMETRY",
+  };
 
   return {
     cleanValue,
     symbology,
     isValid,
+    moduleWidthMm,
+    quietZoneMm,
+    barcodeWidthMm,
+    barcodeHeightMm,
+    symbolModules,
+    fitsInLabel,
+    moduleWidthDots203,
+    moduleWidthDots300,
+    quietZoneDots203,
+    quietZoneDots300,
+    tsplNarrowDots,
+    tsplWideDots,
     moduleWidthPx,
     quietZonePx,
     renderHeightPx,
-    tsplNarrowDots,
-    tsplWideDots,
+    previewWidthPx,
+    previewHeightPx,
     qualityScore,
     rating,
-    diagnosticMessage,
+    riskLevel,
+    riskTitle: riskTitleMap[riskLevel],
+    diagnosticMessage: warnings[0],
+    warnings,
   };
 };
+

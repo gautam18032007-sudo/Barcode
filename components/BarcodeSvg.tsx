@@ -24,6 +24,7 @@ export default function BarcodeSvg({
   height,
   maxHeightPx,
   printableWidthPx,
+  printableWidthMm,
   moduleWidthOverride,
   fontBoldness = "bold",
 }: {
@@ -31,6 +32,7 @@ export default function BarcodeSvg({
   height: number;
   maxHeightPx?: number;
   printableWidthPx?: number;
+  printableWidthMm?: number;
   moduleWidthOverride?: number;
   fontBoldness?: "normal" | "bold" | "extra-bold";
 }) {
@@ -48,12 +50,14 @@ export default function BarcodeSvg({
 
     const layout = computeBarcodeLayout({
       value: cleanValue,
+      printableWidthMm,
       printableWidthPx,
       requestedHeightPx: height,
+      requestedXDimensionMm: moduleWidthOverride && moduleWidthOverride < 1.0 ? moduleWidthOverride : undefined,
     });
 
     const activeModuleWidth = moduleWidthOverride && moduleWidthOverride > 0
-      ? moduleWidthOverride
+      ? (moduleWidthOverride >= 1.0 ? moduleWidthOverride : layout.moduleWidthPx)
       : layout.moduleWidthPx;
 
     const fontOpt = fontBoldness === "normal" ? "" : "bold";
@@ -78,14 +82,7 @@ export default function BarcodeSvg({
         background: "transparent",
         lineColor: "#000000",
       });
-      // JsBarcode sets fixed px width/height; add a matching viewBox so the
-      // barcode scales down to fit the cell while keeping its aspect ratio.
-      // The width/height attributes are kept (not removed) as the SVG's
-      // intrinsic/fallback size — CSS (w-full/h-auto/maxWidth/maxHeight
-      // below) still overrides them for responsive on-screen sizing, but an
-      // SVG with no intrinsic size at all can fail to resolve percentage
-      // sizing during Chrome's print rasterization pass and render blank,
-      // even though the identical DOM renders fine on screen.
+      // Set viewBox and explicit pixel dimensions so the barcode renders at its exact physical size without horizontal distortion
       const generatedWidth = parseFloat(svg.getAttribute("width") ?? "");
       const generatedHeight = parseFloat(svg.getAttribute("height") ?? "");
       if (Number.isFinite(generatedWidth) && Number.isFinite(generatedHeight)) {
@@ -106,13 +103,19 @@ export default function BarcodeSvg({
         svg.innerHTML = "";
       }
     }
-  }, [value, height, printableWidthPx, moduleWidthOverride, fontBoldness]);
+  }, [value, height, printableWidthPx, printableWidthMm, moduleWidthOverride, fontBoldness]);
 
   return (
     <svg
       ref={svgRef}
-      className="h-auto w-full"
-      style={{ maxWidth: "100%", maxHeight: maxHeightPx }}
+      className="shrink-0"
+      style={{
+        display: "block",
+        maxWidth: "100%",
+        maxHeight: maxHeightPx ? `${maxHeightPx}px` : undefined,
+        objectFit: "contain",
+      }}
     />
   );
 }
+

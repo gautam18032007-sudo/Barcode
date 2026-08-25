@@ -68,6 +68,20 @@ describe("computeGrid", () => {
     expect(grid.labelsPerPage).toBe(6);
   });
 
+  it("ignores barcodeOffsetXCm/barcodeOffsetYCm — they reposition the barcode within its cell, not the grid/pagination math", () => {
+    const base = {
+      paperWidthCm: 21,
+      paperHeightCm: 29.7,
+      marginCm: 1,
+      labelWidthCm: 3.8,
+      labelHeightCm: 2.12,
+    };
+    const withoutOffset = computeGrid(base);
+    const withOffset = computeGrid({ ...base, barcodeOffsetXCm: 5, barcodeOffsetYCm: -3 });
+
+    expect(withOffset).toEqual(withoutOffset);
+  });
+
   it("clamps negative values to zero", () => {
     const grid = computeGrid({
       paperWidthCm: 21,

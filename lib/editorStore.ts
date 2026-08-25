@@ -81,6 +81,8 @@ const DEFAULT_LAYOUT: LayoutSettings = {
   gapXCm: 0,
   gapYCm: 0,
   barcodeHeightMm: 12,
+  barcodeOffsetXCm: 0,
+  barcodeOffsetYCm: 0,
   fontSizePt: 7,
   cellPaddingCm: 0.2,
   offsetXCm: 0,

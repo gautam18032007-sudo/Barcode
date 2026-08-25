@@ -20,6 +20,7 @@ import { ChevronDown, Github, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import BarcodeSvg from "@/components/BarcodeSvg";
+import { computeBarcodeLayout } from "@/lib/barcodeEngine";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import ThemeToggle from "@/components/ThemeToggle";
 import PrintPageStyle from "@/components/PrintPageStyle";
@@ -66,6 +67,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -333,6 +335,14 @@ export default function AppPage() {
     const usableWidthPx = Math.max(labelWidthPx - paddingPx, 10);
     return layout.labelTemplate === "jewellery-split" ? usableWidthPx / 2 : usableWidthPx;
   }, [layout.labelWidthCm, layout.cellPaddingCm, layout.labelTemplate]);
+  const barcodeOffsetXPx = useMemo(
+    () => (layout.barcodeOffsetXCm ?? 0) * 37.8,
+    [layout.barcodeOffsetXCm],
+  );
+  const barcodeOffsetYPx = useMemo(
+    () => (layout.barcodeOffsetYCm ?? 0) * 37.8,
+    [layout.barcodeOffsetYCm],
+  );
   const cellPaddingCm = layout.cellPaddingCm ?? 0;
   const offsetX = layout.offsetXCm ?? 0;
   const offsetY = layout.offsetYCm ?? 0;
@@ -1473,6 +1483,8 @@ export default function AppPage() {
                           barcodeHeightPx={barcodeHeightPx}
                           barcodeMaxHeightPx={barcodeMaxHeightPx}
                           barcodeMaxWidthPx={barcodeMaxWidthPx}
+                          barcodeOffsetXPx={barcodeOffsetXPx}
+                          barcodeOffsetYPx={barcodeOffsetYPx}
                           fontSizePt={layout.fontSizePt ?? 7}
                           paddingCm={cellPaddingCm}
                           labelTemplate={layout.labelTemplate}
@@ -1559,6 +1571,8 @@ export default function AppPage() {
         barcodeHeightPx={barcodeHeightPx}
         barcodeMaxHeightPx={barcodeMaxHeightPx}
         barcodeMaxWidthPx={barcodeMaxWidthPx}
+        barcodeOffsetXPx={barcodeOffsetXPx}
+        barcodeOffsetYPx={barcodeOffsetYPx}
         paddingCm={cellPaddingCm}
       />
       <div className="no-print mx-auto max-w-[1600px] px-6 pb-10">
@@ -2223,6 +2237,222 @@ const SidebarContent = memo(function SidebarContent({
   );
 });
 
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const DEMO_BARCODE_VALUE = "0123456789";
+// Same mm->px conversion used for real screen/print rendering elsewhere in
+// this file (barcodeHeightPx, barcodeMaxWidthPx), so previewZoom === 1 shows
+// the barcode at true physical size — zoom only magnifies for easier
+// dragging, it never changes layout state or the physical output.
+const PREVIEW_PX_PER_MM = 3.78;
+// barcodeWidthMm is a module-width control, not a literal box width, so the
+// preview box exaggerates it by this factor for visibility. The resize-drag
+// math below must use the SAME factor to convert cursor movement back into
+// mm, or the handle stops tracking the cursor (dragging a small visual
+// distance would change the value far more than the box appears to move).
+const WIDTH_VISUAL_MULTIPLIER = 5;
+
+type DragMode = "resize" | "position";
+
+function BarcodeSizePositionEditor({
+  layout,
+  setLayout,
+}: {
+  layout: LayoutSettings;
+  setLayout: (layout: LayoutSettings) => void;
+}) {
+  const t = useTranslations("App");
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [keepAspectRatio, setKeepAspectRatio] = useState(false);
+
+  const layoutRef = useRef(layout);
+  useEffect(() => {
+    layoutRef.current = layout;
+  }, [layout]);
+
+  const dragRef = useRef<{
+    mode: DragMode;
+    startX: number;
+    startY: number;
+    startWidthMm: number;
+    startHeightMm: number;
+    startOffsetXCm: number;
+    startOffsetYCm: number;
+  } | null>(null);
+
+  const scale = PREVIEW_PX_PER_MM * previewZoom; // px per mm, at the current preview zoom
+  const widthMm = layout.barcodeWidthMm ?? 15;
+  const heightMm = layout.barcodeHeightMm ?? 12;
+  const offsetXCm = layout.barcodeOffsetXCm ?? 0;
+  const offsetYCm = layout.barcodeOffsetYCm ?? 0;
+  // Bound how far the barcode can be dragged so it can't be pushed fully
+  // outside its own label — a generous heuristic, not an exact fit check.
+  const maxOffsetXCm = layout.labelWidthCm / 3;
+  const maxOffsetYCm = layout.labelHeightCm / 3;
+
+  // Explicit pixel box for the preview barcode (not the literal print
+  // output size — barcodeWidthMm controls module width, not overall
+  // barcode width, so this is a proportional visual proxy sized for
+  // comfortable dragging; the real grid/print preview elsewhere on screen
+  // shows the true WYSIWYG result as layout state updates live).
+  const visualHeightPx = heightMm * scale;
+  const visualWidthPx = clamp(widthMm * scale * WIDTH_VISUAL_MULTIPLIER, 80, 420);
+
+  const cellWidthPx = clamp(layout.labelWidthCm * 10 * scale, visualWidthPx + 24, 480);
+  const cellHeightPx = clamp(layout.labelHeightCm * 10 * scale, visualHeightPx + 24, 260);
+
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const drag = dragRef.current;
+      if (!drag) return;
+      const deltaXpx = event.clientX - drag.startX;
+      const deltaYpx = event.clientY - drag.startY;
+
+      if (drag.mode === "resize") {
+        const nextWidthMm = clamp(drag.startWidthMm + deltaXpx / (scale * WIDTH_VISUAL_MULTIPLIER), 3, 50);
+        let nextHeightMm = clamp(drag.startHeightMm + deltaYpx / scale, 3, 60);
+        if (keepAspectRatio) {
+          nextHeightMm = clamp(drag.startHeightMm * (nextWidthMm / drag.startWidthMm), 3, 60);
+        }
+        setLayout({
+          ...layoutRef.current,
+          barcodeWidthMm: Math.round(nextWidthMm * 10) / 10,
+          barcodeHeightMm: Math.round(nextHeightMm * 10) / 10,
+        });
+      } else {
+        const nextOffsetXCm = clamp(
+          drag.startOffsetXCm + deltaXpx / scale / 10,
+          -maxOffsetXCm,
+          maxOffsetXCm,
+        );
+        const nextOffsetYCm = clamp(
+          drag.startOffsetYCm + deltaYpx / scale / 10,
+          -maxOffsetYCm,
+          maxOffsetYCm,
+        );
+        setLayout({
+          ...layoutRef.current,
+          barcodeOffsetXCm: Math.round(nextOffsetXCm * 100) / 100,
+          barcodeOffsetYCm: Math.round(nextOffsetYCm * 100) / 100,
+        });
+      }
+    },
+    [scale, keepAspectRatio, maxOffsetXCm, maxOffsetYCm, setLayout],
+  );
+
+  const startDrag = useCallback(
+    (mode: DragMode) => (event: PointerEvent<HTMLDivElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.setPointerCapture(event.pointerId);
+      dragRef.current = {
+        mode,
+        startX: event.clientX,
+        startY: event.clientY,
+        startWidthMm: widthMm,
+        startHeightMm: heightMm,
+        startOffsetXCm: offsetXCm,
+        startOffsetYCm: offsetYCm,
+      };
+    },
+    [widthMm, heightMm, offsetXCm, offsetYCm],
+  );
+
+  const endDrag = useCallback((event: PointerEvent<HTMLDivElement>) => {
+    if (dragRef.current && event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    dragRef.current = null;
+  }, []);
+
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between">
+        <Label className="text-[11px] text-muted-foreground">{t("layoutBarcodePosition")}</Label>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            const next = { ...layout, barcodeOffsetXCm: 0, barcodeOffsetYCm: 0 };
+            delete next.barcodeWidthMm;
+            setLayout(next);
+          }}
+        >
+          {t("layoutResetPosition")}
+        </Button>
+      </div>
+
+      <div className="flex justify-center overflow-auto rounded-md border border-dashed border-border bg-muted/30 p-3">
+        <div
+          className="relative flex shrink-0 items-center justify-center bg-white"
+          style={{ width: cellWidthPx, height: cellHeightPx }}
+        >
+          <div
+            className="relative"
+            style={{ transform: `translate(${offsetXCm * scale * 10}px, ${offsetYCm * scale * 10}px)` }}
+          >
+            <div style={{ width: visualWidthPx, height: visualHeightPx }}>
+              <BarcodeSvg
+                value={DEMO_BARCODE_VALUE}
+                height={visualHeightPx}
+                maxHeightPx={visualHeightPx}
+                printableWidthPx={visualWidthPx}
+              />
+            </div>
+            {/* Drag-to-reposition overlay, sized to the visual proxy box above */}
+            <div
+              className="absolute inset-0 cursor-move touch-none"
+              onPointerDown={startDrag("position")}
+              onPointerMove={handlePointerMove}
+              onPointerUp={endDrag}
+            />
+            {/* Drag-to-resize handle */}
+            <div
+              className="absolute -bottom-1.5 -right-1.5 h-3 w-3 cursor-nwse-resize touch-none rounded-sm border-2 border-primary bg-white"
+              onPointerDown={startDrag("resize")}
+              onPointerMove={handlePointerMove}
+              onPointerUp={endDrag}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>
+          {t("layoutBarcodeWidth")}: {widthMm.toFixed(1)}mm · {t("layoutBarcodeHeight")}: {heightMm.toFixed(1)}mm
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Label className="w-20 shrink-0 text-[11px] text-muted-foreground">{t("layoutZoom")}</Label>
+        <Slider
+          value={[previewZoom]}
+          min={1}
+          max={4}
+          step={0.25}
+          onValueChange={([value]) => setPreviewZoom(value)}
+          className="flex-1"
+        />
+        <span className="w-9 shrink-0 text-right text-[11px] text-muted-foreground">
+          {previewZoom.toFixed(2)}x
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Switch
+          id="keep-aspect-ratio"
+          checked={keepAspectRatio}
+          onCheckedChange={setKeepAspectRatio}
+        />
+        <Label htmlFor="keep-aspect-ratio" className="text-[11px] text-muted-foreground">
+          {t("layoutKeepAspectRatio")}
+        </Label>
+      </div>
+    </div>
+  );
+}
+
 type LayoutPanelProps = {
   layout: LayoutSettings;
   setLayout: (layout: LayoutSettings) => void;
@@ -2231,6 +2461,71 @@ type LayoutPanelProps = {
   selectedPresetId: string | null;
   setSelectedPresetId: (value: string | null) => void;
 };
+
+function PrintRiskAssessmentCard({ layout }: { layout: LayoutSettings }) {
+  const sampleValue = "00000018";
+  const labelWidthMm = layout.labelWidthCm * 10;
+  const paddingMm = (layout.cellPaddingCm ?? 0) * 20;
+  const usableWidthMm = layout.labelTemplate === "jewellery-split"
+    ? Math.max((labelWidthMm - paddingMm) / 2, 10)
+    : Math.max(labelWidthMm - paddingMm, 10);
+
+  const result = computeBarcodeLayout({
+    value: sampleValue,
+    printableWidthMm: usableWidthMm,
+    requestedHeightMm: layout.barcodeHeightMm ?? 12,
+    requestedXDimensionMm: layout.barcodeWidthMm ? layout.barcodeWidthMm * 0.1 : undefined,
+  });
+
+  const badgeVariant = result.riskLevel === "LOW_RISK"
+    ? "default"
+    : result.riskLevel === "GOOD"
+    ? "outline"
+    : result.riskLevel === "REVIEW_SETTINGS"
+    ? "secondary"
+    : "destructive";
+
+  return (
+    <Card className="border-border shadow-xs">
+      <CardHeader className="p-3 pb-2 flex-row items-center justify-between space-y-0">
+        <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Print / Scan Risk Assessment
+        </CardTitle>
+        <Badge variant={badgeVariant} className="text-[10px] font-bold">
+          {result.riskTitle}
+        </Badge>
+      </CardHeader>
+      <CardContent className="p-3 pt-0 space-y-2 text-xs">
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 rounded bg-muted/40 p-2 text-[11px]">
+          <div>
+            <span className="text-muted-foreground">X-Dimension:</span>{" "}
+            <span className="font-mono font-medium">{result.moduleWidthMm.toFixed(2)} mm</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">203 DPI:</span>{" "}
+            <span className="font-mono font-medium">{result.moduleWidthDots203.toFixed(2)} dots</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">300 DPI:</span>{" "}
+            <span className="font-mono font-medium">{result.moduleWidthDots300.toFixed(2)} dots</span>
+          </div>
+          <div>
+            <span className="text-muted-foreground">Quiet Zone:</span>{" "}
+            <span className="font-mono font-medium">✓ {result.quietZoneMm.toFixed(1)} mm</span>
+          </div>
+        </div>
+
+        {result.warnings.length > 0 ? (
+          <div className="rounded bg-amber-500/10 p-2 text-[11px] text-amber-600 dark:text-amber-400">
+            {result.warnings.map((w, idx) => (
+              <p key={idx}>• {w}</p>
+            ))}
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}
 
 const LayoutPanel = memo(function LayoutPanel({
   layout,
@@ -2247,6 +2542,7 @@ const LayoutPanel = memo(function LayoutPanel({
 
   return (
     <div className="space-y-3.5 text-xs">
+      <PrintRiskAssessmentCard layout={layout} />
       <Card className="border-border shadow-xs">
         <CardHeader className="p-3 pb-2 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-xs font-semibold text-foreground">{t("layoutPresets")}</CardTitle>
@@ -2476,6 +2772,7 @@ const LayoutPanel = memo(function LayoutPanel({
           </CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-0 space-y-3">
+          <BarcodeSizePositionEditor layout={layout} setLayout={setLayout} />
           <div className="grid grid-cols-2 gap-2.5">
             <div className="space-y-1">
               <Label htmlFor="barcode-height" className="text-[11px] text-muted-foreground">{t("layoutBarcodeHeight")} (mm)</Label>
@@ -2740,6 +3037,8 @@ function JewellerySplitContent({
   barcodeHeightPx,
   barcodeMaxHeightPx,
   barcodeMaxWidthPx,
+  barcodeOffsetXPx,
+  barcodeOffsetYPx,
   fontSizePt,
   brandText,
   nameAlign,
@@ -2753,6 +3052,8 @@ function JewellerySplitContent({
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
   barcodeMaxWidthPx?: number;
+  barcodeOffsetXPx?: number;
+  barcodeOffsetYPx?: number;
   fontSizePt: number;
   brandText: string;
   nameAlign?: NameAlign;
@@ -2767,14 +3068,19 @@ function JewellerySplitContent({
   return (
     <div className="flex h-full w-full items-stretch">
       <div className="flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden">
-        <BarcodeSvg
-          value={product.barcode}
-          height={barcodeHeightPx}
-          maxHeightPx={barcodeMaxHeightPx}
-          printableWidthPx={barcodeMaxWidthPx}
-          moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
-          fontBoldness={fontBoldness}
-        />
+        <div
+          className="max-w-full"
+          style={{ transform: `translate(${barcodeOffsetXPx ?? 0}px, ${barcodeOffsetYPx ?? 0}px)` }}
+        >
+          <BarcodeSvg
+            value={product.barcode}
+            height={barcodeHeightPx}
+            maxHeightPx={barcodeMaxHeightPx}
+            printableWidthPx={barcodeMaxWidthPx}
+            moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
+            fontBoldness={fontBoldness}
+          />
+        </div>
         <p
           className={`w-full truncate text-slate-900 ${
             fontBoldness === "normal"
@@ -2870,6 +3176,8 @@ const LabelCell = memo(function LabelCell({
   barcodeHeightPx,
   barcodeMaxHeightPx,
   barcodeMaxWidthPx,
+  barcodeOffsetXPx,
+  barcodeOffsetYPx,
   fontSizePt,
   paddingCm,
   labelTemplate,
@@ -2897,6 +3205,8 @@ const LabelCell = memo(function LabelCell({
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
   barcodeMaxWidthPx?: number;
+  barcodeOffsetXPx?: number;
+  barcodeOffsetYPx?: number;
   fontSizePt: number;
   paddingCm: number;
   labelTemplate?: "default" | "jewellery-split";
@@ -2937,6 +3247,8 @@ const LabelCell = memo(function LabelCell({
                   barcodeHeightPx={barcodeHeightPx}
                   barcodeMaxHeightPx={barcodeMaxHeightPx}
                   barcodeMaxWidthPx={barcodeMaxWidthPx}
+                  barcodeOffsetXPx={barcodeOffsetXPx}
+                  barcodeOffsetYPx={barcodeOffsetYPx}
                   fontSizePt={fontSizePt}
                   brandText={brandText ?? "ZenZebra"}
                   nameAlign={nameAlign}
@@ -2993,14 +3305,19 @@ const LabelCell = memo(function LabelCell({
                       )}
                     </div>
                   )}
-                  <BarcodeSvg
-                    value={product.barcode}
-                    height={barcodeHeightPx}
-                    maxHeightPx={barcodeMaxHeightPx}
-                    printableWidthPx={barcodeMaxWidthPx}
-                    moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
-                    fontBoldness={fontBoldness}
-                  />
+                  <div
+                    className="max-w-full"
+                    style={{ transform: `translate(${barcodeOffsetXPx ?? 0}px, ${barcodeOffsetYPx ?? 0}px)` }}
+                  >
+                    <BarcodeSvg
+                      value={product.barcode}
+                      height={barcodeHeightPx}
+                      maxHeightPx={barcodeMaxHeightPx}
+                      printableWidthPx={barcodeMaxWidthPx}
+                      moduleWidthOverride={barcodeWidthMm ? barcodeWidthMm * 0.1 : undefined}
+                      fontBoldness={fontBoldness}
+                    />
+                  </div>
                 </>
               )}
               <Button
@@ -3049,6 +3366,8 @@ const PrintArea = memo(function PrintArea({
   barcodeHeightPx,
   barcodeMaxHeightPx,
   barcodeMaxWidthPx,
+  barcodeOffsetXPx,
+  barcodeOffsetYPx,
   paddingCm,
 }: {
   layout: LayoutSettings;
@@ -3058,6 +3377,8 @@ const PrintArea = memo(function PrintArea({
   barcodeHeightPx: number;
   barcodeMaxHeightPx: number;
   barcodeMaxWidthPx?: number;
+  barcodeOffsetXPx?: number;
+  barcodeOffsetYPx?: number;
   paddingCm: number;
 }) {
   return (
@@ -3098,6 +3419,8 @@ const PrintArea = memo(function PrintArea({
                         barcodeHeightPx={barcodeHeightPx}
                         barcodeMaxHeightPx={barcodeMaxHeightPx}
                         barcodeMaxWidthPx={barcodeMaxWidthPx}
+                        barcodeOffsetXPx={barcodeOffsetXPx}
+                        barcodeOffsetYPx={barcodeOffsetYPx}
                         fontSizePt={layout.fontSizePt ?? 7}
                         brandText={layout.brandText ?? "ZenZebra"}
                         nameAlign={layout.nameAlign}
@@ -3154,14 +3477,19 @@ const PrintArea = memo(function PrintArea({
                             )}
                           </div>
                         )}
-                        <BarcodeSvg
-                          value={product.barcode}
-                          height={barcodeHeightPx}
-                          maxHeightPx={barcodeMaxHeightPx}
-                          printableWidthPx={barcodeMaxWidthPx}
-                          moduleWidthOverride={layout.barcodeWidthMm ? layout.barcodeWidthMm * 0.1 : undefined}
-                          fontBoldness={layout.fontBoldness}
-                        />
+                        <div
+                          className="max-w-full"
+                          style={{ transform: `translate(${barcodeOffsetXPx ?? 0}px, ${barcodeOffsetYPx ?? 0}px)` }}
+                        >
+                          <BarcodeSvg
+                            value={product.barcode}
+                            height={barcodeHeightPx}
+                            maxHeightPx={barcodeMaxHeightPx}
+                            printableWidthPx={barcodeMaxWidthPx}
+                            moduleWidthOverride={layout.barcodeWidthMm ? layout.barcodeWidthMm * 0.1 : undefined}
+                            fontBoldness={layout.fontBoldness}
+                          />
+                        </div>
                       </>
                     )
                   ) : null}
