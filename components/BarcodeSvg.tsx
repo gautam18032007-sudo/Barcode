@@ -78,14 +78,20 @@ export default function BarcodeSvg({
         background: "transparent",
         lineColor: "#000000",
       });
-      // JsBarcode sets fixed px width/height; swap them for a viewBox so the
+      // JsBarcode sets fixed px width/height; add a matching viewBox so the
       // barcode scales down to fit the cell while keeping its aspect ratio.
+      // The width/height attributes are kept (not removed) as the SVG's
+      // intrinsic/fallback size — CSS (w-full/h-auto/maxWidth/maxHeight
+      // below) still overrides them for responsive on-screen sizing, but an
+      // SVG with no intrinsic size at all can fail to resolve percentage
+      // sizing during Chrome's print rasterization pass and render blank,
+      // even though the identical DOM renders fine on screen.
       const generatedWidth = parseFloat(svg.getAttribute("width") ?? "");
       const generatedHeight = parseFloat(svg.getAttribute("height") ?? "");
       if (Number.isFinite(generatedWidth) && Number.isFinite(generatedHeight)) {
         svg.setAttribute("viewBox", `0 0 ${generatedWidth} ${generatedHeight}`);
-        svg.removeAttribute("width");
-        svg.removeAttribute("height");
+        svg.setAttribute("width", String(generatedWidth));
+        svg.setAttribute("height", String(generatedHeight));
       }
     };
 
